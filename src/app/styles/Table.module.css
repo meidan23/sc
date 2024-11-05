@@ -1,0 +1,52 @@
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: Arial, sans-serif;
+    margin-top: 20px;
+    color: black;
+  }
+  
+  .table th,
+  .table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: center;
+    color: black;
+  }
+  
+  .table th {
+    background-color: #f2f2f2;
+    font-weight: bold
+  }
+  
+  .table td {
+    background-color: #fafafa;
+    color: black;
+  }
+  
+  .table tr:nth-child(even) td {
+    background-color: #f9f9f9;
+    color: black;
+  }
+  
+  .table tr:hover td {
+    background-color: #e0e0e0;
+  }
+  
+  .hour {
+    font-weight: bold;
+    background-color: #f2f2f2;
+    color: black;
+  }
+  
+  .card {
+    position: relative;
+    width: 100%;
+    max-width: 400px;
+    padding: 20px;
+    background-color: #ffffff; /* רקע הכרטיס */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    color: #333; /* צבע טקסט כהה */
+    margin-top: 10px;
+    border-radius: 8px; /* עיגול פינות */
+  }
