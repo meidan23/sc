@@ -1,7 +1,7 @@
 import { Button, Card, Input } from '@nextui-org/react';
 import React, { useState } from 'react';
 import styles from '../app/styles/Home.module.css';
-import ScheduleTeam from './ScheduleTeam';
+import ScheduleTeam from './Scheduleteam';
 
 const ScheduleTeams = () => {
     const [temp, setTemp] = useState('');
