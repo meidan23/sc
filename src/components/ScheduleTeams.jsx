@@ -2,8 +2,9 @@ import { Button, Card, Input } from '@nextui-org/react';
 import React, { useState } from 'react';
 import styles from '../app/styles/Home.module.css';
 import ScheduleTeam from './Scheduleteam';
+import TeamSchedule from './TeamSchedule'; // Ensure you have this component imported if it exists
 
-const ScheduleTeams = () => {
+const ScheduleTeams = ({ viewType }) => { // שינוי ל-viewType
     const [temp, setTemp] = useState('');
     const [teamNumber, setTeamNumber] = useState(null);
 
@@ -17,7 +18,6 @@ const ScheduleTeams = () => {
 
     return (
         <div dir="rtl" className={styles.container}>
-            <p className="text-black">שיבוץ קבוצות</p>
             {!teamNumber && (
                 <Card className={styles.card}>
                     <p>בחר מספר קבוצה</p>
@@ -37,7 +37,8 @@ const ScheduleTeams = () => {
                     </Button>
                 </Card>
             )}
-            {teamNumber && <ScheduleTeam team={teamNumber} />} {/* מציג את הקומפוננטה רק אם נבחר מספר */}
+            {viewType === 'scheduleTeam' && teamNumber && <ScheduleTeam team={teamNumber} />}
+            {viewType === 'teamSchedule' && teamNumber && <TeamSchedule team={teamNumber} />}
         </div>
     );
 };
