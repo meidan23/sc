@@ -1,6 +1,4 @@
-import { Card } from "@nextui-org/react";
 import React, { useEffect, useState } from "react";
-import styles from "../app/styles/Home.module.css";
 
 const ScheduleTeam = ({ team }) => {
     const [teamsData, setTeamsData] = useState([]);
