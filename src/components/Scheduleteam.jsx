@@ -6,9 +6,8 @@ const ScheduleTeam = ({ team }) => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [successMessage, setSuccessMessage] = useState(null);
-    const [selectedTeam, setSelectedTeam] = useState(null); // Store the team for which slots are being displayed
+    const [selectedTeam, setSelectedTeam] = useState(null);
 
-    // Fetching team data function
     const fetchTeamsData = () => {
         setLoading(true);
         fetch(`/api/teams`)
@@ -88,9 +87,9 @@ const ScheduleTeam = ({ team }) => {
 
             if (response.ok) {
                 setSuccessMessage(`הסלוט שובץ בהצלחה לקבוצה ${selectedTeam.team_number}`);
-                setAvailableSlots([]); // Clear the slots after assignment
-                setSelectedTeam(null); // Clear the selected team
-                fetchTeamsData(); // Refresh the data
+                setAvailableSlots([]);
+                setSelectedTeam(null);
+                fetchTeamsData();
             } else {
                 const errorData = await response.json();
                 setError(errorData.message || "Failed to assign slot to team.");

@@ -7,61 +7,35 @@
   text-align: center;
   padding-top: 20px;
 }
-
 .card {
-  position: flex;
-  width: 100%;
-  max-width: 400px;
-  padding: 20px;
-  background-color: #ffffff; /* רקע הכרטיס */
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  color: #333; /* צבע טקסט כהה */
-  margin-top: 10px;
-  border-radius: 8px; /* עיגול פינות */
-}
-
-.overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 10;
-}
-
-.popupCard {
-  padding: 20px;
-  max-width: 300px;
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   text-align: center;
-  color: #333 !important; /* צבע טקסט כהה לוודא ניגודיות */
-}
-
-.hallList {
-  list-style-type: none;
-  padding: 0;
-  margin: 20px 0;
-}
-
-.hallItem {
-  padding: 10px;
-  background-color: #f9f9f9;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-  margin-bottom: 10px;
-  text-align: center;
-  color: #333 !important; /* שימוש ב-!important */
-  cursor: pointer;
-}
-
-.input {
-  margin-top: 10px;
   width: 100%;
+  max-width: 400px;
+  padding: 20px;
+  background-color: #ffffff;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  color: #333;
+  margin-top: 10px;
+  border-radius: 8px;
+  min-height: 60px;
+  box-sizing: border-box;
+}
+
+.globalReturnButton {
+  position: fixed; 
+  top: 10px; 
+  right: 10px; 
+  z-index: 1000;
+  background-color: #ffffff; 
+  border: none; 
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); 
+  cursor: pointer;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 16px;
+  font-weight: bold;
 }
 
