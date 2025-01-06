@@ -6,11 +6,11 @@ import styles from "../styles/Home.module.css";
 
 export default function Scheduler() {
     const [teamsData, setTeamsData] = useState([]);
-    const [availableSlots, setAvailableSlots] = useState([]);
     const [proposedSchedules, setProposedSchedules] = useState([]);
     const [log, setLog] = useState([]);
     const [loading, setLoading] = useState(false);
     const [successMessage, setSuccessMessage] = useState(null);
+    
 
     // Fetch teams data
     const fetchTeamsData = async () => {
@@ -147,7 +147,7 @@ export default function Scheduler() {
                 },
                 body: JSON.stringify(schedule),
             });
-
+    
             if (response.ok) {
                 setLog((prev) => [
                     ...prev,
@@ -157,7 +157,6 @@ export default function Scheduler() {
                     prev.filter((s) => s !== schedule)
                 );
             } else {
-                const errorData = await response.json();
                 setLog((prev) => [
                     ...prev,
                     `שגיאה באישור השיבוץ לקבוצה ${schedule.team_number}.`,
@@ -169,7 +168,7 @@ export default function Scheduler() {
                 `שגיאה בתהליך אישור השיבוץ: ${error.message}`,
             ]);
         }
-    };
+    };    
 
     const rejectSchedule = (schedule) => {
         setLog((prev) => [
