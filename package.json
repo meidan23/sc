@@ -12,7 +12,7 @@
     "@fullcalendar/interaction": "^6.1.15",
     "@fullcalendar/react": "^6.1.15",
     "@fullcalendar/timegrid": "^6.1.15",
-    "@nextui-org/react": "^2.4.8",
+    "@nextui-org/react": "^2.6.11",
     "keen-slider": "^6.8.6",
     "mongodb": "^6.10.0",
     "next": "15.0.2",
