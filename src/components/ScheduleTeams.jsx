@@ -23,7 +23,7 @@ const ScheduleTeams = ({ viewType }) => {
                     <p>בחר מספר קבוצה</p>
                     <Input 
                         type="number"
-                        placeholder="הזן מספר קבוצה"
+                        placeholder=""
                         value={temp}
                         onChange={handleInputChange}
                         className={styles.input}

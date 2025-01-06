@@ -40,11 +40,13 @@ const ScheduleTeam = ({ team }) => {
             }
             const allSlots = await response.json();
             let filteredSlots = allSlots.filter((slot) => !slot.isBooked);
+    
             if (teamData.isYoung) {
                 filteredSlots = filteredSlots.filter((slot) => slot.start_time <= 19);
             } else {
                 filteredSlots = filteredSlots.filter((slot) => slot.start_time >= 16);
             }
+    
             if (teamData.noOutdoor) {
                 filteredSlots = filteredSlots.filter(
                     (slot) =>
@@ -53,11 +55,30 @@ const ScheduleTeam = ({ team }) => {
                         !slot.location.toLowerCase().includes("סככת")
                 );
             }
+    
             teamData.scheduled_sessions.forEach((session) => {
                 filteredSlots = filteredSlots.filter(
                     (slot) => slot.day !== session.day
                 );
             });
+    
+            // מיפוי סדר ימות השבוע
+            const dayOrder = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"];
+    
+            // מיון לפי יום, אולם ושעה
+            filteredSlots.sort((a, b) => {
+                // מיון לפי יום
+                const dayDiff = dayOrder.indexOf(a.day) - dayOrder.indexOf(b.day);
+                if (dayDiff !== 0) return dayDiff;
+    
+                // מיון לפי אולם (מיקום)
+                const locationDiff = a.location.localeCompare(b.location);
+                if (locationDiff !== 0) return locationDiff;
+    
+                // מיון לפי שעת התחלה
+                return a.start_time - b.start_time;
+            });
+    
             setAvailableSlots(filteredSlots);
             setSelectedTeam(teamData);
             setLoading(false);
@@ -66,6 +87,7 @@ const ScheduleTeam = ({ team }) => {
             setLoading(false);
         }
     };
+    
 
     const assignSlotToTeam = async (slot) => {
         if (!selectedTeam) return;
@@ -99,16 +121,39 @@ const ScheduleTeam = ({ team }) => {
         }
     };
 
-    if (loading) return <p className="text-black">טוען נתונים...</p>;
-    if (error) return <p className="text-black">שגיאה: {error}</p>;
+    if (loading) return <p className="text-center text-blue-500 font-semibold mt-4">טוען נתונים...</p>;
+    if (error) return <p className="text-center text-red-500 font-semibold mt-4">שגיאה: {error}</p>;
 
     return (
-        <div className="text-black">
+        <div className="max-w-3xl mx-auto p-6 bg-white rounded-lg shadow-md mt-4">
             {teamsData.length > 0 ? (
                 teamsData.map((teamData, index) => (
                     <div key={index} className="mb-6">
                         {String(team) === String(teamData.team_number) && (
                             <div>
+                                <h2 className="text-2xl font-bold text-gray-800 mb-4">
+                                    לוח זמנים עבור קבוצה {teamData.team_number}
+                                </h2>
+                                
+                                {/* תצוגת אימונים מתוזמנים */}
+                                {teamData.scheduled_sessions.length > 0 ? (
+                                    <ul className="space-y-4 mb-4">
+                                        {teamData.scheduled_sessions.map((session, i) => (
+                                            <li
+                                                key={i}
+                                                className="p-4 bg-gray-100 rounded-lg shadow-sm border border-gray-200"
+                                            >
+                                                <p><strong>יום:</strong> {session.day}</p>
+                                                <p><strong>שעה:</strong> {session.start_time} - {session.end_time}</p>
+                                                <p><strong>מיקום:</strong> {session.location}</p>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                ) : (
+                                    <p className="text-center text-red-500">אין אימונים מתוזמנים עבור הקבוצה.</p>
+                                )}
+
+                                {/* בדיקת סלוטים פנויים */}
                                 {teamData.scheduled_sessions.length >= teamData.desired_sessions ? (
                                     <p>קבוצה {team} השיגה את מספר האימונים הדרושים.</p>
                                 ) : (
@@ -131,9 +176,10 @@ const ScheduleTeam = ({ team }) => {
                     </div>
                 ))
             ) : (
-                <p>אין קבוצות להצגה</p>
+                <p className="text-center text-red-500">אין קבוצות להצגה.</p>
             )}
 
+            {/* תצוגת סלוטים פנויים */}
             {availableSlots.length > 0 && selectedTeam && (
                 <div className="mt-4 p-4 bg-gray-100 rounded">
                     <h3>סלוטים פנויים לשיבוץ עבור קבוצה {selectedTeam.team_number}</h3>
@@ -153,9 +199,6 @@ const ScheduleTeam = ({ team }) => {
                         ))}
                     </ul>
                 </div>
-            )}
-            {availableSlots.length === 0 && selectedTeam && (
-                <p className="mt-4">אין סלוטים פנויים לשיבוץ עבור קבוצה {selectedTeam.team_number}</p>
             )}
 
             {successMessage && <p className="text-green-500 mt-4">{successMessage}</p>}

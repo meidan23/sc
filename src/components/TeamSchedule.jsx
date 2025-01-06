@@ -31,22 +31,29 @@ const TeamSchedule = ({ team }) => {
         }
     }, [team]);
 
-    if (loading) return <p className="text-black">טוען לוח זמנים...</p>;
-    if (error) return <p className="text-black">שגיאה: {error}</p>;
+    if (loading) return <p className="text-center text-blue-500 font-semibold mt-4">טוען לוח זמנים...</p>;
+    if (error) return <p className="text-center text-red-500 font-semibold mt-4">שגיאה: {error}</p>;
 
     return (
-        <div className="text-black">
-            <h2>לוח זמנים עבור קבוצה {team}</h2>
+        <div className="max-w-3xl mx-auto p-6 bg-white rounded-lg shadow-md mt-4">
+            <h2 className="text-2xl font-bold text-center text-gray-800 mb-4">
+                לוח זמנים עבור קבוצה {team}
+            </h2>
             {schedule.length > 0 ? (
-                <ul>
+                <ul className="space-y-4">
                     {schedule.map((session, index) => (
-                        <li key={index}>
-                            יום: {session.day}, שעה: {session.end_time} - {session.start_time}, מיקום: {session.location}
+                        <li
+                            key={index}
+                            className="p-4 bg-gray-100 rounded-lg shadow-sm border border-gray-200"
+                        >
+                            <p><strong>יום:</strong> {session.day}</p>
+                            <p><strong>שעה:</strong> {session.start_time} - {session.end_time}</p>
+                            <p><strong>מיקום:</strong> {session.location}</p>
                         </li>
                     ))}
                 </ul>
             ) : (
-                <p>אין אימונים מתוזמנים עבור הקבוצה.</p>
+                <p className="text-center text-red-500">אין אימונים מתוזמנים עבור הקבוצה.</p>
             )}
         </div>
     );
