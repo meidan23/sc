@@ -25,13 +25,9 @@ export default function Home() {
   const [activeView, setActiveView] = useState(Views.HOME);
   const [isResetModalOpen, setIsResetModalOpen] = useState(false); // מודל לאיפוס
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false); // מודל הצלחה
-  const [message, setMessage] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
 
   // טיפול באיפוס השיבוץ
   const handleReset = async () => {
-    setMessage(null);
-    setError(null);
 
     try {
       const response = await fetch('/api/reset', {
@@ -46,19 +42,15 @@ export default function Home() {
       }
 
       const data = await response.json();
-      setMessage(data.message);
       setIsResetModalOpen(false); // סגור את מודל האיפוס
       setIsSuccessModalOpen(true); // פתח מודל הצלחה
     } catch (error: any) {
-      setError(error.message);
     }
   };
 
   // סגירת המודל
   const closeResetModal = () => {
     setIsResetModalOpen(false);
-    setMessage(null);
-    setError(null);
   };
 
   // תצוגת הבית
