@@ -26,9 +26,7 @@ export default function Home() {
   const [isResetModalOpen, setIsResetModalOpen] = useState(false); // מודל לאיפוס
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false); // מודל הצלחה
 
-  // טיפול באיפוס השיבוץ
   const handleReset = async () => {
-
     try {
       const response = await fetch('/api/reset', {
         method: 'POST',
@@ -36,17 +34,22 @@ export default function Home() {
           'Content-Type': 'application/json',
         },
       });
-
+  
       if (!response.ok) {
         throw new Error('Failed to reset slots and teams');
       }
-
-      const data = await response.json();
+  
+      await response.json(); 
+  
       setIsResetModalOpen(false); // סגור את מודל האיפוס
       setIsSuccessModalOpen(true); // פתח מודל הצלחה
-    } catch (error: any) {
+    } catch (error) {
+      if (error instanceof Error) {
+        console.error(error.message);
+      }
     }
   };
+  
 
   // סגירת המודל
   const closeResetModal = () => {
