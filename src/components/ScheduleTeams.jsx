@@ -2,9 +2,9 @@ import { Button, Card, Input } from '@nextui-org/react';
 import React, { useState } from 'react';
 import styles from '../app/styles/Home.module.css';
 import ScheduleTeam from './Scheduleteam';
-import TeamSchedule from './TeamSchedule'; // Ensure you have this component imported if it exists
+import TeamSchedule from './TeamSchedule';
 
-const ScheduleTeams = ({ viewType }) => { // שינוי ל-viewType
+const ScheduleTeams = ({ viewType }) => {
     const [temp, setTemp] = useState('');
     const [teamNumber, setTeamNumber] = useState(null);
 

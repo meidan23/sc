@@ -6,8 +6,8 @@ const TeamSchedule = ({ team }) => {
     const [error, setError] = useState(null);
 
     useEffect(() => {
+        setLoading(true);
         if (team) {
-            // קריאה ל-API שמחזיר את כל הקבוצות
             fetch(`/api/teams`)
                 .then((response) => {
                     if (!response.ok) {
@@ -16,7 +16,6 @@ const TeamSchedule = ({ team }) => {
                     return response.json();
                 })
                 .then((data) => {
-                    // מציאת הקבוצה הספציפית לפי מספר הקבוצה
                     const teamData = data.find((t) => String(t.team_number) === String(team));
                     if (teamData) {
                         setSchedule(teamData.scheduled_sessions || []);
@@ -32,8 +31,8 @@ const TeamSchedule = ({ team }) => {
         }
     }, [team]);
 
-    if (loading) return <p>טוען לוח זמנים...</p>;
-    if (error) return <p>שגיאה: {error}</p>;
+    if (loading) return <p className="text-black">טוען לוח זמנים...</p>;
+    if (error) return <p className="text-black">שגיאה: {error}</p>;
 
     return (
         <div className="text-black">

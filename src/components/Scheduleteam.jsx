@@ -2,9 +2,11 @@ import React, { useEffect, useState } from "react";
 
 const ScheduleTeam = ({ team }) => {
     const [teamsData, setTeamsData] = useState([]);
+    const [availableSlots, setAvailableSlots] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [successMessage, setSuccessMessage] = useState(null);
+    const [selectedTeam, setSelectedTeam] = useState(null); // Store the team for which slots are being displayed
 
     // Fetching team data function
     const fetchTeamsData = () => {
@@ -30,47 +32,76 @@ const ScheduleTeam = ({ team }) => {
         fetchTeamsData();
     }, []);
 
-    const scheduleAdditionalSessions = async (teamData) => {
+    const fetchAvailableSlots = async (teamData) => {
+        setLoading(true);
         try {
             const response = await fetch(`/api/slots`);
             if (!response.ok) {
                 throw new Error("Failed to fetch available slots");
             }
-            const availableSlots = await response.json();
-
-            const sessionsNeeded = teamData.desired_sessions - teamData.scheduled_sessions.length;
-            let sessionsScheduled = 0;
-            for (const slot of availableSlots) {
-                if (sessionsScheduled >= sessionsNeeded) break;
-
-                const res = await fetch(`/api/teams`, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({
-                        team_number: teamData.team_number,
-                        day: slot.day,
-                        location: slot.location,
-                        start_time: slot.start_time,
-                        end_time: slot.end_time,
-                    }),
-                });
-
-                if (res.ok) {
-                    sessionsScheduled++;
-                }
+            const allSlots = await response.json();
+            let filteredSlots = allSlots.filter((slot) => !slot.isBooked);
+            if (teamData.isYoung) {
+                filteredSlots = filteredSlots.filter((slot) => slot.start_time <= 19);
+            } else {
+                filteredSlots = filteredSlots.filter((slot) => slot.start_time >= 16);
             }
-
-            setSuccessMessage(`שובצו ${sessionsScheduled} אימונים לקבוצה ${teamData.team_number}`);
-            fetchTeamsData(); // Refresh the data after scheduling
+            if (teamData.noOutdoor) {
+                filteredSlots = filteredSlots.filter(
+                    (slot) =>
+                        !slot.location.includes("חוץ") &&
+                        !slot.location.toLowerCase().includes("outdoor") &&
+                        !slot.location.toLowerCase().includes("סככת")
+                );
+            }
+            teamData.scheduled_sessions.forEach((session) => {
+                filteredSlots = filteredSlots.filter(
+                    (slot) => slot.day !== session.day
+                );
+            });
+            setAvailableSlots(filteredSlots);
+            setSelectedTeam(teamData);
+            setLoading(false);
         } catch (error) {
-            console.error("Error scheduling additional sessions:", error);
+            setError(error.message);
+            setLoading(false);
+        }
+    };
+
+    const assignSlotToTeam = async (slot) => {
+        if (!selectedTeam) return;
+
+        try {
+            const response = await fetch(`/api/teams`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    team_number: selectedTeam.team_number,
+                    day: slot.day,
+                    location: slot.location,
+                    start_time: slot.start_time,
+                    end_time: slot.end_time,
+                }),
+            });
+
+            if (response.ok) {
+                setSuccessMessage(`הסלוט שובץ בהצלחה לקבוצה ${selectedTeam.team_number}`);
+                setAvailableSlots([]); // Clear the slots after assignment
+                setSelectedTeam(null); // Clear the selected team
+                fetchTeamsData(); // Refresh the data
+            } else {
+                const errorData = await response.json();
+                setError(errorData.message || "Failed to assign slot to team.");
+            }
+        } catch (error) {
+            setError(error.message);
         }
     };
 
     if (loading) return <p className="text-black">טוען נתונים...</p>;
-    if (error) return <p className="text-black">שגיאה בטעינת נתוני הקבוצות: {error}</p>;
+    if (error) return <p className="text-black">שגיאה: {error}</p>;
 
     return (
         <div className="text-black">
@@ -83,14 +114,17 @@ const ScheduleTeam = ({ team }) => {
                                     <p>קבוצה {team} השיגה את מספר האימונים הדרושים.</p>
                                 ) : (
                                     <div>
-                                        <p>לקבוצה {team} נותרו {teamData.desired_sessions - teamData.scheduled_sessions.length} אימונים לשיבוץ.</p>
-                                        <button 
-                                            className="bg-blue-500 text-white p-2 rounded mt-2" 
-                                            onClick={() => scheduleAdditionalSessions(teamData)}
+                                        <p>
+                                            לקבוצה {team} נותרו{" "}
+                                            {teamData.desired_sessions - teamData.scheduled_sessions.length} אימונים
+                                            לשיבוץ.
+                                        </p>
+                                        <button
+                                            className="bg-blue-500 text-white p-2 rounded mt-2"
+                                            onClick={() => fetchAvailableSlots(teamData)}
                                         >
-                                            שיבוץ אוטומטי
+                                            בחר סלוט לשיבוץ
                                         </button>
-                                        {successMessage && <p className="text-green-500 mt-2">{successMessage}</p>}
                                     </div>
                                 )}
                             </div>
@@ -100,6 +134,32 @@ const ScheduleTeam = ({ team }) => {
             ) : (
                 <p>אין קבוצות להצגה</p>
             )}
+
+            {availableSlots.length > 0 && selectedTeam && (
+                <div className="mt-4 p-4 bg-gray-100 rounded">
+                    <h3>סלוטים פנויים לשיבוץ עבור קבוצה {selectedTeam.team_number}</h3>
+                    <ul>
+                        {availableSlots.map((slot, index) => (
+                            <li key={index} className="mb-2">
+                                <p>
+                                    יום: {slot.day}, שעה: {slot.start_time} - {slot.end_time}, מקום: {slot.location}
+                                </p>
+                                <button
+                                    className="bg-green-500 text-white p-1 rounded"
+                                    onClick={() => assignSlotToTeam(slot)}
+                                >
+                                    בחר סלוט זה
+                                </button>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            )}
+            {availableSlots.length === 0 && selectedTeam && (
+                <p className="mt-4">אין סלוטים פנויים לשיבוץ עבור קבוצה {selectedTeam.team_number}</p>
+            )}
+
+            {successMessage && <p className="text-green-500 mt-4">{successMessage}</p>}
         </div>
     );
 };

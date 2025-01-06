@@ -7,7 +7,7 @@ export default async function handler(req, res) {
     if (req.method === 'GET') {
         try {
             // שליפת כל הסלוטים הפנויים (isBooked: false)
-            const availableSlots = await collection.find({ isBooked: false }).toArray();
+            const availableSlots = await collection.find().toArray();
             res.status(200).json(availableSlots);
         } catch (error) {
             res.status(500).json({ message: 'Failed to fetch available slots', error: error.message });

@@ -37,6 +37,11 @@ export default function Home() {
               אפס שיבוץ
             </Button>
           </Card>
+          <Card className={styles.card}>
+            <Button className="text-black" onPress={() => window.location.href = '/scheduler'}>
+              שיבוץ אוטומטי חכם
+            </Button>
+          </Card>
         </div>
       )}
       {teamSchedule &&

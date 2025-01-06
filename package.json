@@ -9,6 +9,9 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@fullcalendar/interaction": "^6.1.15",
+    "@fullcalendar/react": "^6.1.15",
+    "@fullcalendar/timegrid": "^6.1.15",
     "@nextui-org/react": "^2.4.8",
     "keen-slider": "^6.8.6",
     "mongodb": "^6.10.0",
