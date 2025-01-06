@@ -25,8 +25,6 @@ export default function Home() {
   const [activeView, setActiveView] = useState(Views.HOME);
   const [isResetModalOpen, setIsResetModalOpen] = useState(false); // מודל לאיפוס
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false); // מודל הצלחה
-  const [message, setMessage] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
 
   const handleReset = async () => {
     setIsResetModalOpen(false); // סגור מודל אישור
