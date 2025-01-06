@@ -4,6 +4,32 @@ import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import styles from '../app/styles/Table.module.css';
 
+const convertToISODate = (day, time) => {
+    const dayNumber = getDayNumber(day);
+    const date = `2024-11-${String(dayNumber).padStart(2, '0')}`;
+    const timeString = convertToTimeString(time);
+    return `${date}T${timeString}:00`;
+};
+
+const convertToTimeString = (time) => {
+    const hours = Math.floor(time);
+    const minutes = (time - hours) * 60;
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+};
+
+const getDayNumber = (day) => {
+    const daysMap = {
+        ראשון: 10,
+        שני: 11,
+        שלישי: 12,
+        רביעי: 13,
+        חמישי: 14,
+        שישי: 15,
+        שבת: 16,
+    };
+    return daysMap[day] || 0;
+};
+
 const Table = ({ hall }) => {
     const [events, setEvents] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -27,7 +53,7 @@ const Table = ({ hall }) => {
                         end: convertToISODate(slot.day, slot.end_time),
                         backgroundColor: isBooked ? '#ffcccc' : '#ccffcc',
                         borderColor: isBooked ? '#cc0000' : '#00cc00',
-                        textColor: '#000000', // טקסט בצבע שחור
+                        textColor: '#000000',
                     };
                 });
 
@@ -40,33 +66,7 @@ const Table = ({ hall }) => {
         };
 
         fetchSlots();
-    }, [hall]);
-
-    const convertToISODate = (day, time) => {
-        const dayNumber = getDayNumber(day);
-        const date = `2024-11-${String(dayNumber).padStart(2, '0')}`;
-        const timeString = convertToTimeString(time);
-        return `${date}T${timeString}:00`;
-    };
-
-    const convertToTimeString = (time) => {
-        const hours = Math.floor(time);
-        const minutes = (time - hours) * 60;
-        return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
-    };
-
-    const getDayNumber = (day) => {
-        const daysMap = {
-            ראשון: 10,
-            שני: 11,
-            שלישי: 12,
-            רביעי: 13,
-            חמישי: 14,
-            שישי: 15,
-            שבת: 16,
-        };
-        return daysMap[day] || 0;
-    };
+    }, [hall]); // אין צורך להוסיף convertToISODate לתלות כי היא מחוץ ל-Hook
 
     if (loading) return <p className="text-black">טוען נתונים...</p>;
     if (error) return <p className="text-black">שגיאה בטעינת הסלוטים: {error}</p>;
@@ -90,9 +90,9 @@ const Table = ({ hall }) => {
                         nowIndicator={true}
                         firstDay={0}
                         dayHeaderFormat={{ weekday: 'long' }}
-                        eventTextColor="#000000" // טקסט שחור באירועים
+                        eventTextColor="#000000"
                         headerToolbar={{
-                            start: '', // הסתרת תפריט ניווט
+                            start: '',
                             center: '',
                             end: '',
                         }}
