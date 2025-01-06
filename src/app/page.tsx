@@ -29,10 +29,8 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
 
   const handleReset = async () => {
-    setMessage(null);
-    setError(null);
     setIsResetModalOpen(false); // סגור מודל אישור
-
+  
     try {
       const response = await fetch('/api/reset', {
         method: 'POST',
@@ -40,19 +38,17 @@ export default function Home() {
           'Content-Type': 'application/json',
         },
       });
-
+  
       if (!response.ok) {
         throw new Error('Failed to reset slots and teams');
       }
-
-      const data = await response.json();
-      setMessage(data.message);
+  
       setIsSuccessModalOpen(true); // פתח מודל הצלחה
-    } catch (error: any) {
-      setError(error.message);
+    } catch (error) {
+      console.error('Reset Error:', error); // לוג שגיאה
     }
   };
-
+  
   const renderHomeView = () => (
     <div>
       {BUTTONS.map((button) => (
