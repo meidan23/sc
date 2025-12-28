@@ -97,6 +97,7 @@ const VenueSchedule: React.FC = () => {
   }, [selectedHall]);
 
   const getHebrewDay = (day: string): string => {
+    const normalizedDay = day.replace(/^יום\s+/, '');
     const daysMap: Record<string, string> = {
       'Sunday': 'ראשון',
       'Monday': 'שני',
@@ -106,7 +107,7 @@ const VenueSchedule: React.FC = () => {
       'Friday': 'שישי',
       'Saturday': 'שבת'
     };
-    return daysMap[day] || day;
+    return daysMap[normalizedDay] || normalizedDay;
   };
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
