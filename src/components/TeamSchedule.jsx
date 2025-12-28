@@ -35,6 +35,30 @@ const TeamSchedule = ({ team, setTeamNumber }) => {
     if (loading) return <p className="text-center text-blue-500 font-semibold mt-4">טוען לוח זמנים...</p>;
     if (error) return <p className="text-center text-red-500 font-semibold mt-4">שגיאה: {error}</p>;
 
+    const dayOrder = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
+    const getHebrewDay = (day) => {
+        const daysMap = {
+            Sunday: 'ראשון',
+            Monday: 'שני',
+            Tuesday: 'שלישי',
+            Wednesday: 'רביעי',
+            Thursday: 'חמישי',
+            Friday: 'שישי',
+            Saturday: 'שבת'
+        };
+
+        return daysMap[day] || day;
+    };
+
+    const sortedSchedule = [...schedule].sort((a, b) => {
+        const dayDiff = dayOrder.indexOf(getHebrewDay(a.day)) - dayOrder.indexOf(getHebrewDay(b.day));
+        if (dayDiff !== 0) return dayDiff;
+        if (a.start_time && b.start_time) {
+            return a.start_time.localeCompare(b.start_time);
+        }
+        return 0;
+    });
+
     return (
         <div dir="rtl" className="max-w-3xl mx-auto p-6 bg-white/90 backdrop-blur-sm rounded-xl shadow-xl mt-4 border border-blue-100">
             <div className="flex justify-between items-center mb-6">
@@ -52,7 +76,7 @@ const TeamSchedule = ({ team, setTeamNumber }) => {
             <div className="flex justify-center">
                 {schedule.length > 0 ? (
                     <div className="grid gap-4 w-full max-w-2xl">
-                        {schedule.map((session, index) => (
+                        {sortedSchedule.map((session, index) => (
                             <div
                                 key={index}
                                 className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg shadow-sm border border-blue-200 hover:shadow-md transition-all duration-300"
