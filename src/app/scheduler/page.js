@@ -52,12 +52,18 @@ export default function Scheduler() {
                 setLoading(false);
                 return;
             }
-    
+
             const assignedDays = {};
+            const assignedSlotIds = new Set();
             let hasSchedules = false; // משתנה לבדיקת הצלחת השיבוץ
+
+            const getSlotId = (slot) =>
+                slot._id ?? `${slot.day}-${slot.start_time}-${slot.location}`;
     
             for (const team of teamsData) {
-                let filteredSlots = [...allSlots];
+                let filteredSlots = [...allSlots].filter(
+                    (slot) => !assignedSlotIds.has(getSlotId(slot))
+                );
     
                 setLog((prev) => [...prev, `בודק אפשרויות שיבוץ עבור קבוצה ${team.team_number}...`]);
     
@@ -108,10 +114,11 @@ export default function Scheduler() {
                         start_time: selectedSlot.start_time,
                         end_time: selectedSlot.end_time,
                     });
-    
+
                     // Mark the day as assigned for this team
                     assignedDays[team.team_number].add(selectedSlot.day);
-    
+                    assignedSlotIds.add(getSlotId(selectedSlot));
+
                     // Remove the slot from the pool
                     filteredSlots.splice(randomIndex, 1);
                     scheduledSessions++;
