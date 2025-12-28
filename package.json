@@ -11,21 +11,13 @@
   "dependencies": {
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
-    "@fullcalendar/interaction": "^6.1.15",
-    "@fullcalendar/react": "^6.1.15",
-    "@fullcalendar/timegrid": "^6.1.15",
     "@mui/material": "^6.3.1",
     "@nextui-org/react": "^2.6.11",
     "framer-motion": "^11.16.0",
-    "keen-slider": "^6.8.6",
     "mongodb": "^6.10.0",
     "next": "15.1.11",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "react-responsive-carousel": "^3.2.23",
-    "react-slick": "^0.30.2",
-    "slick-carousel": "^1.8.1",
-    "swiper": "^11.1.14"
+    "react-dom": "^18.3.1"
   },
   "devDependencies": {
     "@types/node": "^20",
