@@ -17,49 +17,86 @@ def is_indoor(slot: Dict[str, Any]) -> bool:
     return ("outdoor" not in loc) and ("מגרש" not in loc)
 
 
-def solve(teams: List[Dict[str, Any]], slots: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+def solve(
+    teams: List[Dict[str, Any]],
+    slots: List[Dict[str, Any]],
+) -> List[Dict[str, Any]]:
     model = cp_model.CpModel()
 
-    # רק סלוטים פנויים
+    # --- סלוטים פנויים בלבד ---
     avail_slots = [s for s in slots if not s.get("isBooked", False)]
 
-    # needed per team
-    needed = []
+    # --- כמה אימונים חסרים לכל קבוצה ---
+    needed: List[int] = []
     for t in teams:
         desired = int(t["desired_sessions"])
         scheduled_len = len(t.get("scheduled_sessions") or [])
         needed.append(max(0, desired - scheduled_len))
 
-    # x[(ti, si)] = 1 אם team i משובצת ל-slot j
-    x = {}
+    # --- משתנים בינאריים: x[(ti, si)] ---
+    # 1 = קבוצה ti שובצה לסלוט si
+    x: Dict[tuple[int, int], cp_model.IntVar] = {}
+
     for ti, t in enumerate(teams):
         if needed[ti] == 0:
             continue
+
         for si, s in enumerate(avail_slots):
-            # פילטר קשיחים (לא מייצרים משתנה אם אסור)
+            # פילטרים קשיחים (לא יוצרים משתנה אם אסור)
             if t.get("isYoung") and not is_early(s):
                 continue
             if t.get("noOutdoor") and not is_indoor(s):
                 continue
+
             x[(ti, si)] = model.NewBoolVar(f"x_t{ti}_s{si}")
 
-    # אילוץ: כל סלוט לכל היותר קבוצה אחת
+    # ------------------------------------------------
+    # אילוץ 1: כל סלוט לכל היותר קבוצה אחת
+    # ------------------------------------------------
     for si in range(len(avail_slots)):
-        vars_for_slot = [x[(ti, si)] for (ti2, si2) in x.keys() if si2 == si for ti in [ti2]]
+        vars_for_slot = [
+            x[(ti, si)]
+            for (ti, si2) in x.keys()
+            if si2 == si
+        ]
         if vars_for_slot:
             model.Add(sum(vars_for_slot) <= 1)
 
-    # אילוץ: לכל קבוצה עד neededSessions
+    # ------------------------------------------------
+    # אילוץ 2: לכל קבוצה עד מספר האימונים הדרוש
+    # ------------------------------------------------
     for ti in range(len(teams)):
-        vars_for_team = [x[(ti, si)] for (ti2, si) in x.keys() if ti2 == ti]
+        vars_for_team = [
+            x[(ti, si)]
+            for (ti2, si) in x.keys()
+            if ti2 == ti
+        ]
         if vars_for_team:
             model.Add(sum(vars_for_team) <= needed[ti])
 
-    # ---- Objective (מטרה) ----
-    # 1) העיקר: מקסום מספר האימונים ששובצו בפועל
+    # ------------------------------------------------
+    # אילוץ 3: קבוצה לא יכולה להתאמן פעמיים באותו יום
+    # ------------------------------------------------
+    days = set(slot["day"] for slot in avail_slots)
+
+    for ti, _team in enumerate(teams):
+        for day in days:
+            vars_same_day = [
+                x[(ti, si)]
+                for (ti2, si) in x.keys()
+                if ti2 == ti and avail_slots[si]["day"] == day
+            ]
+
+            if vars_same_day:
+                model.Add(sum(vars_same_day) <= 1)
+
+    # ------------------------------------------------
+    # פונקציית מטרה (Objective)
+    # ------------------------------------------------
+    # מטרה עיקרית: למקסם מספר אימונים ששובצו בפועל
     total_assigned = sum(x.values()) if x else 0
 
-    # 2) בונוס קטן להעדפות (אופציונלי) - למשל צעירים מוקדם
+    # בונוס קטן (אופציונלי): צעירים מוקדם
     early_bonus_terms = []
     for (ti, si), var in x.items():
         t = teams[ti]
@@ -67,12 +104,16 @@ def solve(teams: List[Dict[str, Any]], slots: List[Dict[str, Any]]) -> List[Dict
         if t.get("isYoung") and is_early(s):
             early_bonus_terms.append(var)
 
-    # משקל גבוה למקסום שיבוצים, משקל קטן להעדפות
-    model.Maximize(1000 * total_assigned + 1 * sum(early_bonus_terms))
+    model.Maximize(
+        1000 * total_assigned +
+        1 * sum(early_bonus_terms)
+    )
 
-    # Solve
+    # ------------------------------------------------
+    # פתרון
+    # ------------------------------------------------
     solver = cp_model.CpSolver()
-    solver.parameters.max_time_in_seconds = 10.0  # תוכל להגדיל
+    solver.parameters.max_time_in_seconds = 10.0
     solver.parameters.num_search_workers = 8
 
     status = solver.Solve(model)
@@ -80,8 +121,11 @@ def solve(teams: List[Dict[str, Any]], slots: List[Dict[str, Any]]) -> List[Dict
     if status not in (cp_model.OPTIMAL, cp_model.FEASIBLE):
         return []
 
-    # build assignments
+    # ------------------------------------------------
+    # בניית הפלט
+    # ------------------------------------------------
     assignments: List[Dict[str, Any]] = []
+
     for (ti, si), var in x.items():
         if solver.Value(var) == 1:
             t = teams[ti]
@@ -101,8 +145,12 @@ def main():
     payload = json.loads(sys.stdin.read())
     teams = payload["teams"]
     slots = payload["slots"]
+
     result = solve(teams, slots)
-    sys.stdout.write(json.dumps({"assignments": result}, ensure_ascii=False))
+
+    sys.stdout.write(
+        json.dumps({"assignments": result}, ensure_ascii=False)
+    )
 
 
 if __name__ == "__main__":
