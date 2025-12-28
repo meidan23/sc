@@ -1,26 +1,38 @@
 import { NextResponse } from "next/server";
-import { spawn } from "child_process";
+
+const getSolverBaseUrl = () => {
+  const raw = process.env.SOLVER_BASE_URL;
+  if (!raw) return null;
+  return raw.replace(/\/$/, "");
+};
 
 export async function POST(req: Request) {
+  const solverBaseUrl = getSolverBaseUrl();
+
+  if (!solverBaseUrl) {
+    return NextResponse.json(
+      { error: "SOLVER_BASE_URL is not configured" },
+      { status: 500 },
+    );
+  }
+
   const { teams, slots } = await req.json();
 
-  const py = spawn("python3", ["solver/schedule_solver.py"]);
-
-  const result = await new Promise<any>((resolve, reject) => {
-    let out = "";
-    let err = "";
-
-    py.stdout.on("data", d => (out += d.toString()));
-    py.stderr.on("data", d => (err += d.toString()));
-
-    py.on("close", code => {
-      if (code !== 0) return reject(err);
-      resolve(JSON.parse(out));
-    });
-
-    py.stdin.write(JSON.stringify({ teams, slots }));
-    py.stdin.end();
+  const solveRes = await fetch(`${solverBaseUrl}/solve`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ teams, slots }),
   });
+
+  if (!solveRes.ok) {
+    const detail = await solveRes.text();
+    return NextResponse.json(
+      { error: "Solver request failed", detail },
+      { status: solveRes.status },
+    );
+  }
+
+  const result = await solveRes.json();
 
   return NextResponse.json(result);
 }
