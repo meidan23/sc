@@ -70,6 +70,23 @@ export default function Home() {
         ))}
       </div>
 
+      <section className={styles.section}>
+        <h2 className={styles.sectionTitle}>יצירה</h2>
+        <p className={styles.sectionDescription}>
+          לחצו כדי לבחור מה ברצונכם ליצור במערכת.
+        </p>
+        <Card className={styles.card} isHoverable>
+          <Button
+            as={Link}
+            href="/create"
+            className="text-black w-full h-full p-6 text-lg"
+            variant="light"
+          >
+            מעבר לעמוד יצירה
+          </Button>
+        </Card>
+      </section>
+
       <footer className={styles.footer}>
         <p> 2025 מערכת ניהול אולמות</p>
       </footer>
