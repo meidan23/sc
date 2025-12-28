@@ -4,9 +4,12 @@ const uri = process.env.MONGODB_URI ||
   'mongodb+srv://meidan23:236952147@cluster0.wd3wl.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
 
 declare global {
-  let _mongoClient: MongoClient | null;
-  let _mongoDb: Db | null;
+  // eslint-disable-next-line no-var
+  var _mongoClient: MongoClient | undefined;
+  // eslint-disable-next-line no-var
+  var _mongoDb: Db | undefined;
 }
+
 
 
 export async function connectToDatabase(): Promise<Db> {
