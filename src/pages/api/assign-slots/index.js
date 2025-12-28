@@ -16,54 +16,61 @@ export default async function handler(req, res) {
             return res.status(400).json({ message: 'Invalid assignments format' });
         }
 
-        // עדכון כל השיבוצים בטרנזקציה אחת
-        const session = db.client.startSession();
+        const slotUpdates = [];
+        const teamUpdates = [];
 
-        try {
-            await session.withTransaction(async () => {
-                for (const assignment of assignments) {
-                    const { team_number, day, start_time, end_time, location } = assignment;
+        for (const assignment of assignments) {
+            const { team_number, day, start_time, end_time, location } = assignment;
 
-                    // 1. עדכון הסלוט כתפוס
-                    await slotsCollection.updateOne(
-                        { 
-                            day,
-                            start_time,
-                            end_time,
-                            location,
-                            isBooked: { $ne: true }
-                        },
-                        {
-                            $set: { 
-                                isBooked: true,
-                                assigned_team: team_number
-                            }
-                        },
-                        { session }
-                    );
-
-                    // 2. הוספת האימון לקבוצה
-                    await teamsCollection.updateOne(
-                        { team_number },
-                        {
-                            $push: {
-                                scheduled_sessions: {
-                                    day,
-                                    start_time,
-                                    end_time,
-                                    location
-                                }
-                            }
-                        },
-                        { session }
-                    );
+            slotUpdates.push({
+                updateOne: {
+                    filter: {
+                        day,
+                        start_time,
+                        end_time,
+                        location,
+                        isBooked: { $ne: true }
+                    },
+                    update: {
+                        $set: {
+                            isBooked: true,
+                            assigned_team: team_number
+                        }
+                    }
                 }
             });
 
-            res.status(200).json({ message: 'Assignments completed successfully' });
-        } finally {
-            await session.endSession();
+            teamUpdates.push({
+                updateOne: {
+                    filter: { team_number },
+                    update: {
+                        $push: {
+                            scheduled_sessions: {
+                                day,
+                                start_time,
+                                end_time,
+                                location
+                            }
+                        }
+                    }
+                }
+            });
         }
+
+        if (slotUpdates.length === 0) {
+            return res.status(200).json({ message: 'No assignments to process' });
+        }
+
+        const [slotResult, teamResult] = await Promise.all([
+            slotsCollection.bulkWrite(slotUpdates, { ordered: false }),
+            teamsCollection.bulkWrite(teamUpdates, { ordered: false })
+        ]);
+
+        res.status(200).json({
+            message: 'Assignments completed successfully',
+            slotUpdates: slotResult.modifiedCount,
+            teamUpdates: teamResult.modifiedCount
+        });
     } catch (error) {
         console.error('Error in assign-slots:', error);
         res.status(500).json({ message: 'Failed to assign slots' });
