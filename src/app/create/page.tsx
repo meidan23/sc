@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { Button, Card } from '@nextui-org/react';
+import styles from '../styles/Home.module.css';
 
 const editLinks = [
   { label: 'עריכת קבוצות', href: '/edit/teams' },
@@ -25,7 +26,7 @@ export default function CreateHubPage() {
       <div className="mx-auto max-w-4xl" dir="rtl">
         <div className="grid gap-4 md:grid-cols-3">
           {editLinks.map((link) => (
-            <Card key={link.label} isHoverable className="min-h-[96px]">
+            <Card key={link.label} isHoverable className={styles.card}>
               <Button
                 as={Link}
                 href={link.href}

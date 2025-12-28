@@ -30,6 +30,7 @@ export default function Home() {
     { label: 'הצג לו״ז אולם', href: '/venue-schedule' },
     { label: 'שבץ קבוצה', href: '/schedule-team' },
     { label: 'שיבוץ אוטומטי חכם', href: '/auto-schedule' },
+    { label: 'עריכה', href: '/create' },
     { label: 'אפס שיבוץ', action: 'reset' },
   ];
 
