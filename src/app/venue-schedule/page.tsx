@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import VenueSchedule from '../../components/VenueSchedule';
+import VenueSchedule from '../../components/VenueSchedule.tsx';
 import { Button } from '@nextui-org/react';
 import Link from 'next/link';
 
