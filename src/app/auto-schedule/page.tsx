@@ -3,20 +3,7 @@
 import React, { useState } from 'react';
 import { Button, Card, CardBody, CardHeader, Spinner, Progress, Modal, ModalContent, ModalBody } from '@nextui-org/react';
 import Link from 'next/link';
-
-interface Team {
-  team_number: string;
-  desired_sessions: number;
-  scheduled_sessions: any[];
-}
-
-interface Slot {
-  day: string;
-  start_time: string;
-  end_time: string;
-  location: string;
-  isBooked?: boolean;
-}
+import { runAutoSchedule } from '../../services/autoScheduler';
 
 export default function AutoSchedulePage() {
   const [isScheduling, setIsScheduling] = useState(false);
@@ -33,81 +20,13 @@ export default function AutoSchedulePage() {
     setSuccess(false);
 
     try {
-      // 1. קבלת כל הקבוצות
-      setStatus('אוסף נתונים על קבוצות...');
-      setProgress(20);
-      const teamsResponse = await fetch('/api/teams');
-      if (!teamsResponse.ok) throw new Error('נכשל בטעינת נתוני הקבוצות');
-      const teams: Team[] = await teamsResponse.json();
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // 2. קבלת כל הסלוטים הפנויים
-      setStatus('בודק זמינות אולמות...');
-      setProgress(40);
-      const slotsResponse = await fetch('/api/slots');
-      if (!slotsResponse.ok) throw new Error('נכשל בטעינת נתוני הסלוטים');
-      const slots: Slot[] = await slotsResponse.json();
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // 3. אלגוריתם שיבוץ חכם
-      setStatus('מחשב אילוצים ומבצע שיבוץ אופטימלי...');
-      setProgress(60);
-
-      // מיון הקבוצות לפי מספר האימונים הדרוש (יורד)
-      const sortedTeams = [...teams].sort((a, b) => 
-        (b.desired_sessions - b.scheduled_sessions.length) - 
-        (a.desired_sessions - a.scheduled_sessions.length)
-      );
-
-      // מיון הסלוטים הפנויים
-      const availableSlots = slots.filter(slot => !slot.isBooked);
-
-      // שיבוץ לכל קבוצה
-      for (const team of sortedTeams) {
-        const neededSessions = team.desired_sessions - team.scheduled_sessions.length;
-        if (neededSessions <= 0) continue;
-
-        // בחירת סלוטים מתאימים לקבוצה
-        const teamSlots = availableSlots
-          .filter(slot => !slot.isBooked)
-          .slice(0, neededSessions);
-
-        if (teamSlots.length > 0) {
-          // שיבוץ הסלוטים לקבוצה
-          const assignments = teamSlots.map(slot => ({
-            team_number: team.team_number,
-            ...slot
-          }));
-
-          // עדכון הסלוטים כתפוסים
-          const assignResponse = await fetch('/api/assign-slots', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ assignments })
-          });
-
-          if (!assignResponse.ok) {
-            throw new Error('נכשל בשיבוץ הקבוצות');
-          }
-
-          // סימון הסלוטים כתפוסים
-          assignments.forEach(assignment => {
-            const slotIndex = availableSlots.findIndex(s => 
-              s.day === assignment.day && 
-              s.start_time === assignment.start_time && 
-              s.location === assignment.location
-            );
-            if (slotIndex !== -1) {
-              availableSlots[slotIndex].isBooked = true;
-            }
-          });
-        }
-      }
-
-      setStatus('השיבוץ הושלם בהצלחה!');
-      setProgress(100);
+      await runAutoSchedule({
+        onProgress: ({ status: nextStatus, progress: nextProgress }) => {
+          setStatus(nextStatus);
+          setProgress(nextProgress);
+        },
+      });
       setSuccess(true);
-
     } catch (error) {
       console.error('Error in auto scheduling:', error);
       setError(error instanceof Error ? error.message : 'אירעה שגיאה בתהליך השיבוץ');
