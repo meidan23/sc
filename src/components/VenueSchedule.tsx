@@ -24,29 +24,20 @@ interface Slot {
   isBooked?: boolean;
 }
 
+interface Venue {
+  _id?: string;
+  name: string;
+}
+
 const DAYS_OF_WEEK = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
 const HOURS = Array.from({ length: 16 }, (_, i) => i + 8);
 const START_HOUR = 8;
 
-const HALLS = [
-  "אולם שדות",
-  "אולם הפועל",
-  "אולם לב המושבה",
-  "חוץ לב המושבה 1",
-  "חוץ לב המושבה 2",
-  "אולם בן גוריון",
-  "אולם קריית חינוך",
-  "סככת קריית חינוך 1",
-  "סככת קריית חינוך 2",
-  "חוץ שדות 1",
-  "חוץ שדות 2",
-  "חוץ לב המושבה קאנטרי",
-  "חוץ ארגמן"
-].sort();
-
 const VenueSchedule: React.FC = () => {
   const [selectedHall, setSelectedHall] = useState('');
   const [slots, setSlots] = useState<Slot[]>([]);
+  const [venues, setVenues] = useState<Venue[]>([]);
+  const [venuesLoading, setVenuesLoading] = useState(true);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -96,7 +87,30 @@ const VenueSchedule: React.FC = () => {
     fetchSlots();
   }, [selectedHall]);
 
+  useEffect(() => {
+    const fetchVenues = async () => {
+      try {
+        setVenuesLoading(true);
+        const response = await fetch('/api/venues');
+        if (!response.ok) throw new Error('נכשל בטעינת אולמות');
+        const data = await response.json();
+        const sortedVenues = [...data].sort((a: Venue, b: Venue) =>
+          a.name.localeCompare(b.name, 'he')
+        );
+        setVenues(sortedVenues);
+        setError(null);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'שגיאה לא ידועה');
+      } finally {
+        setVenuesLoading(false);
+      }
+    };
+
+    fetchVenues();
+  }, []);
+
   const getHebrewDay = (day: string): string => {
+    const normalizedDay = day.replace(/^יום\s+/, '');
     const daysMap: Record<string, string> = {
       'Sunday': 'ראשון',
       'Monday': 'שני',
@@ -106,7 +120,7 @@ const VenueSchedule: React.FC = () => {
       'Friday': 'שישי',
       'Saturday': 'שבת'
     };
-    return daysMap[day] || day;
+    return daysMap[normalizedDay] || normalizedDay;
   };
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
@@ -115,8 +129,8 @@ const VenueSchedule: React.FC = () => {
   };
 
   const renderHallSelection = () => {
-    const filteredHalls = HALLS.filter(hall =>
-      hall.toLowerCase().includes(searchTerm.toLowerCase())
+    const filteredVenues = venues.filter((venue) =>
+      venue.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     return (
@@ -155,21 +169,27 @@ const VenueSchedule: React.FC = () => {
                     ]
                   }}
                 />
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                  {filteredHalls.map((hall) => (
-                    <Button
-                      key={hall}
-                      className={`p-4 text-center transition-all duration-300 ${
-                        selectedHall === hall
-                          ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg'
-                          : 'bg-white hover:bg-blue-50 text-gray-700 border-2 border-blue-200'
-                      }`}
-                      onClick={() => setSelectedHall(hall)}
-                    >
-                      {hall}
-                    </Button>
-                  ))}
-                </div>
+                {venuesLoading ? (
+                  <div className="text-center text-gray-600">
+                    טוען אולמות...
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                    {filteredVenues.map((venue) => (
+                      <Button
+                        key={venue._id ?? venue.name}
+                        className={`p-4 text-center transition-all duration-300 ${
+                          selectedHall === venue.name
+                            ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg'
+                            : 'bg-white hover:bg-blue-50 text-gray-700 border-2 border-blue-200'
+                        }`}
+                        onClick={() => setSelectedHall(venue.name)}
+                      >
+                        {venue.name}
+                      </Button>
+                    ))}
+                  </div>
+                )}
               </div>
             </CardBody>
           </Card>
