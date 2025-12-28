@@ -4,10 +4,10 @@ const uri = process.env.MONGODB_URI ||
   'mongodb+srv://meidan23:236952147@cluster0.wd3wl.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
 
 declare global {
-  // מאפשר cache אמיתי בין reloads
-  var _mongoClient: MongoClient | null;
-  var _mongoDb: Db | null;
+  let _mongoClient: MongoClient | null;
+  let _mongoDb: Db | null;
 }
+
 
 export async function connectToDatabase(): Promise<Db> {
   if (global._mongoDb) {
