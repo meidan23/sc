@@ -70,6 +70,23 @@ export default function Home() {
         ))}
       </div>
 
+      <section className={styles.section}>
+        <h2 className={styles.sectionTitle}>ניהול נתונים</h2>
+        <p className={styles.sectionDescription}>
+          עריכת נתונים קיימים ויצירת נתונים חדשים מהמסד.
+        </p>
+        <Card className={styles.card} isHoverable>
+          <Button
+            as={Link}
+            href="/create"
+            className="text-black w-full h-full p-6 text-lg"
+            variant="light"
+          >
+            מעבר לניהול נתונים
+          </Button>
+        </Card>
+      </section>
+
       <footer className={styles.footer}>
         <p> 2025 מערכת ניהול אולמות</p>
       </footer>
