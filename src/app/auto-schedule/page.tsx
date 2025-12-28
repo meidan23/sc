@@ -21,9 +21,9 @@ export default function AutoSchedulePage() {
 
     try {
       await runAutoSchedule({
-        onProgress: ({ status: nextStatus, progress: nextProgress }) => {
-          setStatus(nextStatus);
-          setProgress(nextProgress);
+        onProgress: ({ status, progress }: { status: string; progress: number }) => {
+          setStatus(status);
+          setProgress(progress);
         },
       });
       setSuccess(true);
