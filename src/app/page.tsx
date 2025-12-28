@@ -71,6 +71,19 @@ export default function Home() {
         ))}
       </div>
 
+      <section className={styles.section}>
+        <Card className={styles.card} isHoverable>
+          <Button
+            as={Link}
+            href="/create"
+            className="text-black w-full h-full p-6 text-lg"
+            variant="light"
+          >
+            עריכה
+          </Button>
+        </Card>
+      </section>
+
       <footer className={styles.footer}>
         <p> 2025 מערכת ניהול אולמות</p>
       </footer>
