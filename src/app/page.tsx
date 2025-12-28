@@ -71,10 +71,6 @@ export default function Home() {
       </div>
 
       <section className={styles.section}>
-        <h2 className={styles.sectionTitle}>ניהול נתונים</h2>
-        <p className={styles.sectionDescription}>
-          עריכת נתונים קיימים ויצירת נתונים חדשים מהמסד.
-        </p>
         <Card className={styles.card} isHoverable>
           <Button
             as={Link}
@@ -82,7 +78,7 @@ export default function Home() {
             className="text-black w-full h-full p-6 text-lg"
             variant="light"
           >
-            מעבר לניהול נתונים
+            עריכה
           </Button>
         </Card>
       </section>

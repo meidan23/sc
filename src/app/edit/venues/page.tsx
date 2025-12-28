@@ -80,6 +80,15 @@ export default function EditVenuesPage() {
           <p className="text-slate-600">עדכנו את פרטי האולמות במסד הנתונים.</p>
         </div>
 
+        <Button
+          as={Link}
+          href="/create/venue"
+          color="primary"
+          className="mb-6"
+        >
+          הוספת אולם
+        </Button>
+
         {status && <p className="mb-4 text-sm text-slate-700">{status}</p>}
 
         {loading ? (

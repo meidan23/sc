@@ -23,7 +23,8 @@ export default function EditTeamsPage() {
         const response = await fetch('/api/teams');
         if (!response.ok) throw new Error('שגיאה בטעינת הקבוצות');
         const data = await response.json();
-        setTeams(data);
+        const sortedTeams = [...data].sort((a: Team, b: Team) => a.team_number - b.team_number);
+        setTeams(sortedTeams);
       } catch (error) {
         setStatus(error instanceof Error ? error.message : 'שגיאה לא ידועה');
       } finally {
@@ -81,6 +82,15 @@ export default function EditTeamsPage() {
           <h1 className="mb-2 text-2xl font-bold text-slate-800">עריכת קבוצות</h1>
           <p className="text-slate-600">ערכו את פרטי הקבוצות הקיימות במסד.</p>
         </div>
+
+        <Button
+          as={Link}
+          href="/create/team"
+          color="primary"
+          className="mb-6"
+        >
+          הוספת קבוצה
+        </Button>
 
         {status && <p className="mb-4 text-sm text-slate-700">{status}</p>}
 

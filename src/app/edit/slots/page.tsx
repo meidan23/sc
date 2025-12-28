@@ -25,7 +25,13 @@ export default function EditSlotsPage() {
         const response = await fetch('/api/slots');
         if (!response.ok) throw new Error('שגיאה בטעינת הסלוטים');
         const data = await response.json();
-        setSlots(data);
+        const sortedSlots = [...data].sort((a: Slot, b: Slot) => {
+          if (a.day !== b.day) {
+            return a.day.localeCompare(b.day, 'he');
+          }
+          return Number(a.start_time) - Number(b.start_time);
+        });
+        setSlots(sortedSlots);
       } catch (error) {
         setStatus(error instanceof Error ? error.message : 'שגיאה לא ידועה');
       } finally {
@@ -83,6 +89,15 @@ export default function EditSlotsPage() {
           <h1 className="mb-2 text-2xl font-bold text-slate-800">עריכת סלוטים</h1>
           <p className="text-slate-600">ערכו את זמני האימונים והשיוך לקבוצות.</p>
         </div>
+
+        <Button
+          as={Link}
+          href="/create/slot"
+          color="primary"
+          className="mb-6"
+        >
+          הוספת סלוט
+        </Button>
 
         {status && <p className="mb-4 text-sm text-slate-700">{status}</p>}
 
