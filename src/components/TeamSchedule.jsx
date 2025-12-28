@@ -53,10 +53,10 @@ const TeamSchedule = ({ team, setTeamNumber }) => {
     const sortedSchedule = [...schedule].sort((a, b) => {
         const dayDiff = dayOrder.indexOf(getHebrewDay(a.day)) - dayOrder.indexOf(getHebrewDay(b.day));
         if (dayDiff !== 0) return dayDiff;
-        if (a.start_time && b.start_time) {
-            return a.start_time.localeCompare(b.start_time);
-        }
-        return 0;
+        const startTimeA = Number(a.start_time);
+        const startTimeB = Number(b.start_time);
+        if (Number.isNaN(startTimeA) || Number.isNaN(startTimeB)) return 0;
+        return startTimeA - startTimeB;
     });
 
     return (
