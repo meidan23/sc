@@ -36,7 +36,10 @@ const TeamSchedule = ({ team, setTeamNumber }) => {
     if (error) return <p className="text-center text-red-500 font-semibold mt-4">שגיאה: {error}</p>;
 
     const dayOrder = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
-    const getHebrewDay = (day) => {
+    const dayOrderMap = new Map(dayOrder.map((day, index) => [day, index]));
+    const normalizeDay = (day) => {
+        if (!day) return '';
+        const normalizedDay = String(day).replace(/^יום\s+/, '').trim();
         const daysMap = {
             Sunday: 'ראשון',
             Monday: 'שני',
@@ -47,16 +50,18 @@ const TeamSchedule = ({ team, setTeamNumber }) => {
             Saturday: 'שבת'
         };
 
-        return daysMap[day] || day;
+        return daysMap[normalizedDay] || normalizedDay;
     };
 
     const sortedSchedule = [...schedule].sort((a, b) => {
-        const dayDiff = dayOrder.indexOf(getHebrewDay(a.day)) - dayOrder.indexOf(getHebrewDay(b.day));
+        const dayIndexA = dayOrderMap.get(normalizeDay(a.day)) ?? Number.MAX_SAFE_INTEGER;
+        const dayIndexB = dayOrderMap.get(normalizeDay(b.day)) ?? Number.MAX_SAFE_INTEGER;
+        const dayDiff = dayIndexA - dayIndexB;
         if (dayDiff !== 0) return dayDiff;
-        if (a.start_time && b.start_time) {
-            return a.start_time.localeCompare(b.start_time);
-        }
-        return 0;
+        const startTimeA = Number(a.start_time);
+        const startTimeB = Number(b.start_time);
+        if (Number.isNaN(startTimeA) || Number.isNaN(startTimeB)) return 0;
+        return startTimeA - startTimeB;
     });
 
     return (
@@ -84,7 +89,7 @@ const TeamSchedule = ({ team, setTeamNumber }) => {
                                 <div className="grid grid-cols-3 gap-4 text-center">
                                     <div>
                                         <span className="text-gray-600 block mb-1 text-sm">יום</span>
-                                        <span className="font-semibold text-gray-800">{session.day}</span>
+                                        <span className="font-semibold text-gray-800">{normalizeDay(session.day)}</span>
                                     </div>
                                     <div>
                                         <span className="text-gray-600 block mb-1 text-sm">שעות</span>
