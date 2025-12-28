@@ -1,163 +1,161 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import styles from './styles/Home.module.css';
 import { Card, Button, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from '@nextui-org/react';
-import VenueSchedule from '../components/VenueSchedule';
-import ScheduleTeams from '../components/ScheduleTeams';
-
-const Views = {
-  HOME: 'home',
-  TEAM_SCHEDULE: 'teamSchedule',
-  VENUE_SCHEDULE: 'venueSchedule',
-  SCHEDULE_TEAM: 'scheduleTeam',
-};
-
-const BUTTONS = [
-  { label: 'הצג לו״ז קבוצה', view: Views.TEAM_SCHEDULE },
-  { label: 'הצג לו״ז אולם', view: Views.VENUE_SCHEDULE },
-  { label: 'שבץ קבוצה', view: Views.SCHEDULE_TEAM },
-  { label: 'אפס שיבוץ', action: 'reset' },
-  { label: 'שיבוץ אוטומטי חכם', link: '/scheduler' },
-];
+import { useSchedule } from '../hooks/useSchedule';
+import Link from 'next/link';
 
 export default function Home() {
-  const [activeView, setActiveView] = useState(Views.HOME);
-  const [isResetModalOpen, setIsResetModalOpen] = useState(false); // מודל לאיפוס
-  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false); // מודל הצלחה
+  const [isResetModalOpen, setIsResetModalOpen] = useState(false);
+  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
+  const { resetSchedule, isLoading, error } = useSchedule();
 
-  const handleReset = async () => {
+  const handleReset = useCallback(async () => {
     try {
-      const response = await fetch('/api/reset', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-  
-      if (!response.ok) {
-        throw new Error('Failed to reset slots and teams');
-      }
-  
-      await response.json(); 
-  
-      setIsResetModalOpen(false); // סגור את מודל האיפוס
-      setIsSuccessModalOpen(true); // פתח מודל הצלחה
+      await resetSchedule();
+      setIsResetModalOpen(false);
+      setIsSuccessModalOpen(true);
     } catch (error) {
-      if (error instanceof Error) {
-        console.error(error.message);
-      }
+      console.error(error instanceof Error ? error.message : 'שגיאה לא ידועה');
     }
-  };
-  
+  }, [resetSchedule]);
 
-  // סגירת המודל
-  const closeResetModal = () => {
+  const closeResetModal = useCallback(() => {
     setIsResetModalOpen(false);
-  };
+  }, []);
 
-  // תצוגת הבית
-  const renderHomeView = () => (
-    <div>
-      {BUTTONS.map((button) => (
-        <Card key={button.label} className={styles.card}>
-          <Button
-            className="text-black"
-            onPress={() => {
-              console.log('Button pressed:', button.label);
-              if (button.link) {
-                window.location.href = button.link;
-              } else if (button.action === 'reset') {
-                console.log('Opening reset modal');
-                setIsResetModalOpen(true); // פתח את מודל האיפוס
-              } else {
-                setActiveView(button.view!);
-              }
-            }}
+  const buttons = [
+    { label: 'הצג לו״ז קבוצה', href: '/team-schedule' },
+    { label: 'הצג לו״ז אולם', href: '/venue-schedule' },
+    { label: 'שבץ קבוצה', href: '/schedule-team' },
+    { label: 'שיבוץ אוטומטי חכם', href: '/auto-schedule' },
+    { label: 'אפס שיבוץ', action: 'reset' },
+  ];
+
+  return (
+    <div className={styles.container}>
+      <div className={styles.header}>
+        <h1>מערכת ניהול אולמות</h1>
+        <p>ברוכים הבאים למערכת ניהול האולמות. בחרו באפשרות הרצויה:</p>
+      </div>
+      
+      <div className={styles.buttonContainer}>
+        {buttons.map((button) => (
+          <Card 
+            key={button.label} 
+            className={styles.card}
+            isHoverable
           >
-            {button.label}
-          </Button>
-        </Card>
-      ))}
+            {button.action === 'reset' ? (
+              <Button
+                className="text-black w-full h-full p-6 text-lg"
+                onPress={() => setIsResetModalOpen(true)}
+                isLoading={isLoading}
+                variant="light"
+              >
+                {button.label}
+              </Button>
+            ) : (
+              <Button
+                as={Link}
+                href={button.href}
+                className="text-black w-full h-full p-6 text-lg"
+                variant="light"
+              >
+                {button.label}
+              </Button>
+            )}
+          </Card>
+        ))}
+      </div>
 
-{/* מודל איפוס */}
-{isResetModalOpen && (
-  <Modal
-  isOpen={isResetModalOpen}
-  onClose={closeResetModal}
-  dir="rtl"
-  className="fixed flex items-center justify-center z-[9999]"
-  placement="center"
-  hideCloseButton
->
-  <ModalContent className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full">
-    <ModalHeader className="text-lg font-bold text-center border-b pb-2">⚠️ אישור איפוס</ModalHeader>
-    <ModalBody className="text-center py-4">
-      <p className="text-gray-600">האם אתה בטוח שברצונך לאפס את כל השיבוץ?</p>
-    </ModalBody>
-    <ModalFooter className="flex justify-center gap-4 border-t pt-2">
-      <Button onPress={closeResetModal} color="default" variant="light" className="w-24 border border-red-500">
-        לא
-      </Button>
-      <Button onPress={handleReset} color="danger" variant="solid" className="w-24 border border-green-500">
-        כן
-      </Button>
-    </ModalFooter>
-    </ModalContent>
-  </Modal>
-)}
+      <footer className={styles.footer}>
+        <p> 2025 מערכת ניהול אולמות</p>
+      </footer>
 
-{/* מודל הצלחה */}
-{isSuccessModalOpen && (
-  <Modal
-    isOpen={isSuccessModalOpen}
-    onClose={() => setIsSuccessModalOpen(false)}
-    dir="rtl"
-    className="fixed flex items-center justify-center z-[9999]"
-    placement="center"
-    hideCloseButton
-  >
-    <ModalContent className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full">
-      <ModalHeader className="text-lg font-bold text-center border-b pb-2">🎉 איפוס בוצע בהצלחה</ModalHeader>
-      <ModalBody className="text-center py-4">
-        <p className="text-gray-600">כל הסלוטים והקבוצות אופסו בהצלחה!</p>
-      </ModalBody>
-      <ModalFooter className="flex justify-center gap-4 border-t pt-2">
-        <Button onPress={() => setIsSuccessModalOpen(false)} color="success" variant="solid" className="w-24 border">
-          סגור
-        </Button>
-      </ModalFooter>
-    </ModalContent>
-  </Modal>
-)}
-    </div>
-  );
-
-  // תצוגת תתי עמודים
-  const renderSubView = (component: React.ReactNode) => (
-    <div className={styles.componentContainer}>
-      <button
-        className={styles.globalReturnButton}
-        onClick={() => setActiveView(Views.HOME)}
+      <Modal 
+        isOpen={isResetModalOpen} 
+        onClose={closeResetModal}
+        placement="center"
+        backdrop="blur"
+        classNames={{
+          base: "fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2",
+          backdrop: "bg-gradient-to-t from-zinc-900 to-zinc-900/10 opacity-50",
+          wrapper: "z-[1000]"
+        }}
       >
-        חזור
-      </button>
-      {component}
+        <ModalContent>
+          <div className="bg-white p-6 rounded-lg max-w-md w-full text-center" dir="rtl">
+            <ModalHeader className="flex justify-center">
+              <h3 className="text-xl font-bold">⚠️ אישור איפוס</h3>
+            </ModalHeader>
+            <ModalBody>
+              <p className="text-gray-600 mb-4">
+                האם אתה בטוח שברצונך לאפס את כל השיבוצים? פעולה זו תמחק את כל האימונים המשובצים.
+              </p>
+              {error && (
+                <p className="text-red-500 mb-4">{error}</p>
+              )}
+            </ModalBody>
+            <ModalFooter className="flex justify-center gap-4">
+              <Button
+                color="danger"
+                variant="light"
+                onPress={handleReset}
+                isLoading={isLoading}
+                className="min-w-[120px]"
+              >
+                כן, אפס הכל
+              </Button>
+              <Button 
+                color="primary"
+                variant="flat"
+                onPress={closeResetModal}
+                isDisabled={isLoading}
+                className="min-w-[120px]"
+              >
+                ביטול
+              </Button>
+            </ModalFooter>
+          </div>
+        </ModalContent>
+      </Modal>
+
+      <Modal 
+        isOpen={isSuccessModalOpen} 
+        onClose={() => setIsSuccessModalOpen(false)}
+        placement="center"
+        backdrop="blur"
+        classNames={{
+          base: "fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2",
+          backdrop: "bg-gradient-to-t from-zinc-900 to-zinc-900/10 opacity-50",
+          wrapper: "z-[1000]"
+        }}
+      >
+        <ModalContent>
+          <div className="bg-white p-6 rounded-lg max-w-md w-full text-center" dir="rtl">
+            <ModalHeader className="flex justify-center">
+              <h3 className="text-xl font-bold">✅ הפעולה הושלמה</h3>
+            </ModalHeader>
+            <ModalBody>
+              <p className="text-gray-600">
+                כל השיבוצים אופסו בהצלחה
+              </p>
+            </ModalBody>
+            <ModalFooter className="flex justify-center">
+              <Button 
+                color="primary"
+                variant="flat"
+                onPress={() => setIsSuccessModalOpen(false)}
+                className="min-w-[120px]"
+              >
+                סגור
+              </Button>
+            </ModalFooter>
+          </div>
+        </ModalContent>
+      </Modal>
     </div>
   );
-
-  // מנהל תצוגות
-  const renderView = () => {
-    const viewComponents = {
-      [Views.TEAM_SCHEDULE]: <ScheduleTeams viewType="teamSchedule" />,
-      [Views.VENUE_SCHEDULE]: <VenueSchedule />,
-      [Views.SCHEDULE_TEAM]: <ScheduleTeams viewType="scheduleTeam" />,
-    };
-
-    return activeView === Views.HOME
-      ? renderHomeView()
-      : renderSubView(viewComponents[activeView]);
-  };
-
-  return <div className={styles.container}>{renderView()}</div>;
 }

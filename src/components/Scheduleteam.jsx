@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
+import { Button } from "@nextui-org/react";
 
-const ScheduleTeam = ({ team }) => {
+const ScheduleTeam = ({ team, setTeamNumber }) => {
     const [teamsData, setTeamsData] = useState([]);
     const [availableSlots, setAvailableSlots] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -125,83 +126,63 @@ const ScheduleTeam = ({ team }) => {
     if (error) return <p className="text-center text-red-500 font-semibold mt-4">שגיאה: {error}</p>;
 
     return (
-        <div className="max-w-3xl mx-auto p-6 bg-white rounded-lg shadow-md mt-4">
+        <div dir="rtl" className="max-w-3xl mx-auto p-6 bg-white/90 backdrop-blur-sm rounded-xl shadow-xl mt-4 border border-blue-100">
+            <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-bold text-center bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                    לוח זמנים עבור קבוצה {team}
+                </h2>
+                <Button
+                    onClick={() => setTeamNumber('')}
+                    className="bg-white text-blue-600 border-2 border-blue-200 hover:bg-blue-50 transition-all duration-300"
+                    size="lg"
+                    dir="ltr"
+                >
+                    ← חזרה לבחירת קבוצה
+                </Button>
+            </div>
+            
             {teamsData.length > 0 ? (
                 teamsData.map((teamData, index) => (
                     <div key={index} className="mb-6">
                         {String(team) === String(teamData.team_number) && (
                             <div>
-                                <h2 className="text-2xl font-bold text-gray-800 mb-4">
-                                    לוח זמנים עבור קבוצה {teamData.team_number}
-                                </h2>
-                                
                                 {/* תצוגת אימונים מתוזמנים */}
                                 {teamData.scheduled_sessions.length > 0 ? (
                                     <ul className="space-y-4 mb-4">
                                         {teamData.scheduled_sessions.map((session, i) => (
                                             <li
                                                 key={i}
-                                                className="p-4 bg-gray-100 rounded-lg shadow-sm border border-gray-200"
+                                                className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg shadow-sm border border-blue-200 hover:shadow-md transition-all duration-300"
                                             >
-                                                <p><strong>יום:</strong> {session.day}</p>
-                                                <p><strong>שעה:</strong> {session.start_time} - {session.end_time}</p>
-                                                <p><strong>מיקום:</strong> {session.location}</p>
+                                                <div className="grid grid-cols-3 gap-4 text-center">
+                                                    <div>
+                                                        <span className="text-gray-600 block mb-1 text-sm">יום</span>
+                                                        <span className="font-semibold text-gray-800">{session.day}</span>
+                                                    </div>
+                                                    <div>
+                                                        <span className="text-gray-600 block mb-1 text-sm">שעות</span>
+                                                        <span className="font-semibold text-gray-800">{session.start_time} - {session.end_time}</span>
+                                                    </div>
+                                                    <div>
+                                                        <span className="text-gray-600 block mb-1 text-sm">מיקום</span>
+                                                        <span className="font-semibold text-gray-800">{session.location}</span>
+                                                    </div>
+                                                </div>
                                             </li>
                                         ))}
                                     </ul>
                                 ) : (
-                                    <p className="text-center text-red-500">אין אימונים מתוזמנים עבור הקבוצה.</p>
-                                )}
-
-                                {/* בדיקת סלוטים פנויים */}
-                                {teamData.scheduled_sessions.length >= teamData.desired_sessions ? (
-                                    <p>קבוצה {team} השיגה את מספר האימונים הדרושים.</p>
-                                ) : (
-                                    <div>
-                                        <p>
-                                            לקבוצה {team} נותרו{" "}
-                                            {teamData.desired_sessions - teamData.scheduled_sessions.length} אימונים
-                                            לשיבוץ.
-                                        </p>
-                                        <button
-                                            className="bg-blue-500 text-white p-2 rounded mt-2"
-                                            onClick={() => fetchAvailableSlots(teamData)}
-                                        >
-                                            בחר סלוט לשיבוץ
-                                        </button>
-                                    </div>
+                                    <p className="text-center text-gray-500 bg-gray-50 p-4 rounded-lg border border-gray-200">
+                                        אין אימונים מתוזמנים עבור הקבוצה
+                                    </p>
                                 )}
                             </div>
                         )}
                     </div>
                 ))
             ) : (
-                <p className="text-center text-red-500">אין קבוצות להצגה.</p>
+                <p className="text-center text-gray-500">לא נמצאו נתונים</p>
             )}
-
-            {/* תצוגת סלוטים פנויים */}
-            {availableSlots.length > 0 && selectedTeam && (
-                <div className="mt-4 p-4 bg-gray-100 rounded">
-                    <h3>סלוטים פנויים לשיבוץ עבור קבוצה {selectedTeam.team_number}</h3>
-                    <ul>
-                        {availableSlots.map((slot, index) => (
-                            <li key={index} className="mb-2">
-                                <p>
-                                    יום: {slot.day}, שעה: {slot.start_time} - {slot.end_time}, מקום: {slot.location}
-                                </p>
-                                <button
-                                    className="bg-green-500 text-white p-1 rounded"
-                                    onClick={() => assignSlotToTeam(slot)}
-                                >
-                                    בחר סלוט זה
-                                </button>
-                            </li>
-                        ))}
-                    </ul>
-                </div>
-            )}
-
-            {successMessage && <p className="text-green-500 mt-4">{successMessage}</p>}
         </div>
     );
 };

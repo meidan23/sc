@@ -1,0 +1,146 @@
+.calendarContainer {
+  position: relative;
+  width: 100%;
+  height: calc(100vh - 180px);
+  direction: rtl;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+}
+
+.headerRow {
+  display: flex;
+  border-bottom: 2px solid #eaeaea;
+  background: #f9fafb;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  height: 50px;
+  padding-right: 60px;
+  flex-shrink: 0;
+}
+
+.dayHeader {
+  flex: 1;
+  text-align: center;
+  padding: 12px;
+  font-weight: bold;
+  color: #374151;
+  font-size: 1rem;
+  min-width: 150px;
+  border-left: 1px solid #eaeaea;
+}
+
+.gridContainer {
+  position: relative;
+  flex: 1;
+  display: flex;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.timeColumn {
+  position: sticky;
+  right: 0;
+  top: 0;
+  width: 60px;
+  background: #f9fafb;
+  border-left: 1px solid #eaeaea;
+  z-index: 1;
+  flex-shrink: 0;
+}
+
+.timeSlot {
+  height: 60px;
+  border-bottom: 1px solid #eaeaea;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  color: #6b7280;
+}
+
+.gridLines {
+  flex: 1;
+  display: flex;
+  overflow: auto;
+  position: relative;
+  max-height: 100%;
+}
+
+.dayColumn {
+  flex: 1;
+  min-width: 150px;
+  position: relative;
+  border-left: 1px solid #f0f0f0;
+  height: 960px;
+}
+
+.hourRow {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 60px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.eventBlock {
+  position: absolute;
+  right: 2px;
+  left: 2px;
+  padding: 6px;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  overflow: hidden;
+  z-index: 1;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.eventBlock:hover {
+  transform: scale(1.02);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.eventBlock.booked {
+  background-color: #ff4d4d;
+  color: white;
+}
+
+.eventBlock.available {
+  background-color: #4caf50;
+  color: white;
+}
+
+.eventTime {
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+.eventTeam {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.currentTimeIndicator {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: #ff6b6b;
+  z-index: 3;
+}
+
+.currentTimeDot {
+  position: absolute;
+  right: -4px;
+  top: -4px;
+  width: 8px;
+  height: 8px;
+  background-color: #ff6b6b;
+  border-radius: 50%;
+}

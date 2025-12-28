@@ -1,39 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import FullCalendar from '@fullcalendar/react';
-import timeGridPlugin from '@fullcalendar/timegrid';
-import interactionPlugin from '@fullcalendar/interaction';
-import styles from '../app/styles/Table.module.css';
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Typography } from '@mui/material';
 
-const convertToISODate = (day, time) => {
-    const dayNumber = getDayNumber(day);
-    const date = `2024-11-${String(dayNumber).padStart(2, '0')}`;
-    const timeString = convertToTimeString(time);
-    return `${date}T${timeString}:00`;
-};
-
-const convertToTimeString = (time) => {
-    const hours = Math.floor(time);
-    const minutes = (time - hours) * 60;
-    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
-};
-
-const getDayNumber = (day) => {
-    const daysMap = {
-        ראשון: 10,
-        שני: 11,
-        שלישי: 12,
-        רביעי: 13,
-        חמישי: 14,
-        שישי: 15,
-        שבת: 16,
-    };
-    return daysMap[day] || 0;
-};
-
-const Table = ({ hall }) => {
-    const [events, setEvents] = useState([]);
+const Table1 = ({ hall }) => {
+    const [slots, setSlots] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [timeRanges, setTimeRanges] = useState([]);
+
+    const daysOfWeek = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
 
     useEffect(() => {
         const fetchSlots = async () => {
@@ -41,67 +15,98 @@ const Table = ({ hall }) => {
                 const response = await fetch('/api/slots');
                 if (!response.ok) throw new Error('Failed to fetch slots');
                 const data = await response.json();
-
                 const hallSlots = data.filter(slot => slot.location === hall);
+                setSlots(hallSlots);
 
-                const formattedEvents = hallSlots.map(slot => {
-                    const isBooked = slot.isBooked;
-
-                    return {
-                        title: isBooked ? `קבוצה ${slot.assigned_team}` : 'פנוי',
-                        start: convertToISODate(slot.day, slot.start_time),
-                        end: convertToISODate(slot.day, slot.end_time),
-                        backgroundColor: isBooked ? '#ffcccc' : '#ccffcc',
-                        borderColor: isBooked ? '#cc0000' : '#00cc00',
-                        textColor: '#000000',
-                    };
+                const timeRangesSet = new Set();
+                hallSlots.forEach(slot => {
+                    const startHour = convertToTimeString(slot.start_time);
+                    const endHour = convertToTimeString(slot.end_time);
+                    timeRangesSet.add(`${startHour}-${endHour}`);
                 });
+                setTimeRanges(Array.from(timeRangesSet).sort());
 
-                setEvents(formattedEvents);
                 setLoading(false);
             } catch (error) {
                 setError(error.message);
                 setLoading(false);
             }
         };
-
         fetchSlots();
-    }, [hall]); // אין צורך להוסיף convertToISODate לתלות כי היא מחוץ ל-Hook
+    }, [hall]);
 
-    if (loading) return <p className="text-black">טוען נתונים...</p>;
-    if (error) return <p className="text-black">שגיאה בטעינת הסלוטים: {error}</p>;
+    const convertToTimeString = (time) => {
+        const hours = Math.floor(time);
+        const minutes = (time - hours) * 60;
+        return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+    };
+
+    const findSlot = (day, timeRange) => {
+        const [start, end] = timeRange.split('-').map(convertTimeStringToDecimal);
+        return slots.find(slot => {
+            const slotDay = getHebrewDay(slot.day);
+            return slotDay === day && slot.start_time === start && slot.end_time === end;
+        });
+    };
+
+    const getHebrewDay = (day) => {
+        const daysMap = {
+            Sunday: 'ראשון',
+            Monday: 'שני',
+            Tuesday: 'שלישי',
+            Wednesday: 'רביעי',
+            Thursday: 'חמישי',
+            Friday: 'שישי',
+            Saturday: 'שבת'
+        };
+        return daysMap[day] || day;
+    };
+
+    const convertTimeStringToDecimal = (timeString) => {
+        const [hours, minutes] = timeString.split(':').map(Number);
+        return hours + minutes / 60;
+    };
+
+    if (loading) return <p>טוען נתונים...</p>;
+    if (error) return <p>שגיאה בטעינת הסלוטים: {error}</p>;
 
     return (
         <div>
-            <h1 className="text-black">{hall}</h1>
-            <div className={styles.googleTable} style={{ display: 'flex', color: '#000' }}>
-                {/* FullCalendar */}
-                <div style={{ flex: 1 }}>
-                    <FullCalendar
-                        direction='rtl'
-                        plugins={[timeGridPlugin, interactionPlugin]}
-                        initialView="timeGridWeek"
-                        locale="he"
-                        events={events}
-                        allDaySlot={false}
-                        slotMinTime="08:00:00"
-                        slotMaxTime="22:00:00"
-                        height="auto"
-                        nowIndicator={true}
-                        firstDay={0}
-                        dayHeaderFormat={{ weekday: 'long' }}
-                        eventTextColor="#000000"
-                        headerToolbar={{
-                            start: '',
-                            center: '',
-                            end: '',
-                        }}
-                        contentHeight="auto"
-                    />
-                </div>
-            </div>
+            <Typography variant="h4" gutterBottom style={{ color: '#000000' }}>{hall}</Typography>
+            <TableContainer component={Paper}>
+                <Table dir="rtl">
+                    <TableHead>
+                        <TableRow>
+                            <TableCell></TableCell>
+                            {daysOfWeek.map((day, index) => (
+                                <TableCell key={index}>{day}</TableCell>
+                            ))}
+                        </TableRow>
+                    </TableHead>
+                    <TableBody>
+                        {timeRanges.map((timeRange, rowIndex) => (
+                            <TableRow key={rowIndex}>
+                                <TableCell>{timeRange}</TableCell>
+                                {daysOfWeek.map((day, colIndex) => {
+                                    const slot = findSlot(day, timeRange);
+                                    const isBooked = slot?.isBooked || slot?.assigned_team;
+                                    return (
+                                        <TableCell key={colIndex} style={{
+                                            backgroundColor: isBooked ? '#f44336' : slot ? '#00c903' : '#d3d3d3',
+                                            color: isBooked || slot ? 'white' : '#777',
+                                            textAlign: 'center'
+                                        }}>
+                                            {isBooked ? `קבוצה ${slot.assigned_team}` : slot ? 'פנוי' : 'לא זמין'}
+                                        </TableCell>
+                                    );
+                                })}
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </TableContainer>
         </div>
     );
 };
 
-export default Table;
+export default Table1;

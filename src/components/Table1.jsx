@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import styles from '../app/styles/Table.module.css';
-import { Card } from '@nextui-org/react';
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Typography } from '@mui/material';
 
 const Table1 = ({ hall }) => {
     const [slots, setSlots] = useState([]);
@@ -16,7 +15,6 @@ const Table1 = ({ hall }) => {
                 const response = await fetch('/api/slots');
                 if (!response.ok) throw new Error('Failed to fetch slots');
                 const data = await response.json();
-
                 const hallSlots = data.filter(slot => slot.location === hall);
                 setSlots(hallSlots);
 
@@ -69,56 +67,44 @@ const Table1 = ({ hall }) => {
         return hours + minutes / 60;
     };
 
-    if (loading) return <p className="text-black">טוען נתונים...</p>;
-    if (error) return <p className="text-black">שגיאה בטעינת הסלוטים: {error}</p>;
+    if (loading) return <p>טוען נתונים...</p>;
+    if (error) return <p>שגיאה בטעינת הסלוטים: {error}</p>;
 
     return (
         <div>
-            <Card className={styles.card}>
-                <h1 className="text-black">{hall}</h1>
-            </Card>
-            <table dir="rtl" className={styles.table}>
-                <thead>
-                    <tr>
-                        <th></th>
-                        {daysOfWeek.map((day, index) => (
-                            <th key={index}>{day}</th>
+            <Typography variant="h4" gutterBottom style={{ color: '#000000' }}>{hall}</Typography>
+            <TableContainer component={Paper}>
+                <Table dir="rtl">
+                    <TableHead>
+                        <TableRow>
+                            <TableCell></TableCell>
+                            {daysOfWeek.map((day, index) => (
+                                <TableCell key={index}>{day}</TableCell>
+                            ))}
+                        </TableRow>
+                    </TableHead>
+                    <TableBody>
+                        {timeRanges.map((timeRange, rowIndex) => (
+                            <TableRow key={rowIndex}>
+                                <TableCell>{timeRange}</TableCell>
+                                {daysOfWeek.map((day, colIndex) => {
+                                    const slot = findSlot(day, timeRange);
+                                    const isBooked = slot?.isBooked || slot?.assigned_team;
+                                    return (
+                                        <TableCell key={colIndex} style={{
+                                            backgroundColor: isBooked ? '#f44336' : slot ? '#00c903' : '#d3d3d3',
+                                            color: isBooked || slot ? 'white' : '#777',
+                                            textAlign: 'center'
+                                        }}>
+                                            {isBooked ? `קבוצה ${slot.assigned_team}` : slot ? 'פנוי' : 'לא זמין'}
+                                        </TableCell>
+                                    );
+                                })}
+                            </TableRow>
                         ))}
-                    </tr>
-                </thead>
-                <tbody>
-                    {timeRanges.map((timeRange, rowIndex) => (
-                        <tr key={rowIndex}>
-                            <td className={styles.hour}>{timeRange}</td>
-                            {daysOfWeek.map((day, colIndex) => {
-                                const slot = findSlot(day, timeRange);
-                                const isBooked = slot?.isBooked || slot?.assigned_team; // בדיקת תפוסות הסלוט
-                                
-                                return (
-                                    <td
-                                        key={colIndex}
-                                        className={
-                                            isBooked
-                                                ? styles.booked // צבע אדום לתפוס
-                                                : slot
-                                                ? styles.available // צבע אחר לפנוי
-                                                : styles.unavailable // צבע "לא זמין" לשעות שלא מופיעות
-                                        }
-                                    >
-                                        {isBooked ? (
-                                            <span>קבוצה {slot.assigned_team}</span>
-                                        ) : slot ? (
-                                            <span>פנוי</span>
-                                        ) : (
-                                            <span>לא זמין</span>
-                                        )}
-                                    </td>
-                                );
-                            })}
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
+                    </TableBody>
+                </Table>
+            </TableContainer>
         </div>
     );
 };
