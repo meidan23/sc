@@ -9,6 +9,7 @@ const editLinks = [
   { label: 'עריכת קבוצות', href: '/edit/teams' },
   { label: 'עריכת אולמות', href: '/edit/venues' },
   { label: 'עריכת סלוטים', href: '/edit/slots' },
+  { label: 'עריכת מאמנים', href: '/edit/coaches' },
 ];
 
 export default function CreateHubPage() {
