@@ -1,7 +1,10 @@
 import { MongoClient, Db } from 'mongodb';
 
-const uri = process.env.MONGODB_URI || 
-  'mongodb+srv://meidan23:236952147@cluster0.wd3wl.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
+const uri = process.env.MONGODB_URI;
+
+if (!uri) {
+  throw new Error('Missing MONGODB_URI');
+}
 
 declare global {
   // eslint-disable-next-line no-var
