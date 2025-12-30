@@ -55,14 +55,17 @@ export async function runAutoSchedule({
   if (!solveRes.ok) {
     let errorDetail = "";
     try {
-      const payload = await solveRes.json();
+      const responseText = await solveRes.text();
+      const payload = responseText ? JSON.parse(responseText) : null;
       const detail =
         typeof payload?.detail === "string" ? payload.detail.trim() : "";
+      const error =
+        typeof payload?.error === "string" ? payload.error.trim() : "";
       const status =
         typeof payload?.status === "number" ? ` (${payload.status})` : "";
       const solverUrl =
         typeof payload?.solverUrl === "string" ? payload.solverUrl : "";
-      errorDetail = [detail, solverUrl].filter(Boolean).join(" | ");
+      errorDetail = [error, detail, solverUrl].filter(Boolean).join(" | ");
       errorDetail = `${status}${errorDetail ? `: ${errorDetail}` : ""}`;
     } catch {
       // ignore parsing errors and fallback to generic message

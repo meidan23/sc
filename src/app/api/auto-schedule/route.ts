@@ -11,7 +11,7 @@ export async function POST(req: Request) {
 
   if (!solverBaseUrl) {
     return NextResponse.json(
-      { error: "SOLVER_BASE_URL is not configured" },
+      { error: "SOLVER_BASE_URL is not configured", status: 500 },
       { status: 500 },
     );
   }
