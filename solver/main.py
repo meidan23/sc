@@ -15,7 +15,7 @@ class SolveRequest(BaseModel):
 
 @app.get("/")
 def health():
-    return {"status": "ok"}
+    return {"status": "ok"} 
 
 
 @app.post("/solve")
