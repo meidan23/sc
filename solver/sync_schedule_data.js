@@ -1,13 +1,19 @@
 /* eslint-disable no-console */
 const { MongoClient } = require('mongodb');
 
-const DEFAULT_MONGODB_URI =
+/* ===================== DB CONFIG ===================== */
+
+const MONGODB_URI =
   process.env.MONGODB_URI ||
   'mongodb+srv://meidan23:236952147@cluster0.wd3wl.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
 
 const DB_NAME = 'sc';
 
-/* ===================== CONFIG ===================== */
+/* ===================== CORE CONSTANTS ===================== */
+
+const TOTAL_TEAMS = 39;
+
+/* ===================== TEAM CONFIG ===================== */
 
 const YOUNG_TEAMS = new Set([
   4, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 34, 35, 36, 37,
@@ -15,6 +21,16 @@ const YOUNG_TEAMS = new Set([
 
 const NO_OUTDOOR_TEAMS = new Set([1, 5, 7]);
 
+const SESSIONS_BY_TEAM = new Map([
+  [1, 4],
+  [5, 4],
+  [35, 2],
+  [36, 2],
+]);
+
+/*
+  COACH_GROUPS = מאמנים שמאמנים יותר מקבוצה אחת
+*/
 const COACH_GROUPS = [
   [2, 3, 4],
   [5, 6],
@@ -33,17 +49,60 @@ const COACH_GROUPS = [
   [32, 33],
 ];
 
-const SESSIONS_BY_TEAM = new Map([
-  [1, 4],
-  [5, 4],
-  [35, 2],
-  [36, 2],
-]);
+/* ===================== HELPERS ===================== */
 
-const generateCoachName = (index) => `מאמן ${index + 1}`;
 const isOutdoorVenue = (name) => name.includes('חוץ');
 
-/* ===================== SLOT DEFINITIONS ===================== */
+/*
+  team_number -> coach_name
+*/
+const buildCoachByTeam = () => {
+  const map = new Map();
+  let coachIndex = 0;
+
+  COACH_GROUPS.forEach((group) => {
+    const coach = `מאמן ${++coachIndex}`;
+    group.forEach((team) => map.set(team, coach));
+  });
+
+  for (let team = 1; team <= TOTAL_TEAMS; team++) {
+    if (!map.has(team)) {
+      map.set(team, `מאמן ${++coachIndex}`);
+    }
+  }
+
+  return map;
+};
+
+const buildCoaches = (coachByTeam) => {
+  const map = new Map();
+
+  for (const [team, coach] of coachByTeam.entries()) {
+    if (!map.has(coach)) map.set(coach, []);
+    map.get(coach).push(team);
+  }
+
+  return [...map.entries()].map(([name, teams]) => ({
+    name,
+    teams: teams.sort((a, b) => a - b),
+    created_at: new Date(),
+  }));
+};
+
+const buildTeams = (coachByTeam) =>
+  Array.from({ length: TOTAL_TEAMS }, (_, i) => {
+    const team_number = i + 1;
+    return {
+      team_number,
+      coach_name: coachByTeam.get(team_number),
+      desired_sessions: SESSIONS_BY_TEAM.get(team_number) ?? 3,
+      isYoung: YOUNG_TEAMS.has(team_number),
+      noOutdoor: NO_OUTDOOR_TEAMS.has(team_number),
+      created_at: new Date(),
+    };
+  });
+
+/* ===================== SLOT DEFINITIONS (ALL) ===================== */
 
 const SLOT_DEFINITIONS = [
   { slot_number: 1, day: 'יום ראשון', location: 'אולם שדות', start_time: 14.5, end_time: 16 },
@@ -193,43 +252,28 @@ const SLOT_DEFINITIONS = [
   { slot_number: 139, day: 'יום שבת', location: 'אולם לב המושבה', start_time: 18.5, end_time: 20 },
   { slot_number: 140, day: 'יום שבת', location: 'אולם לב המושבה', start_time: 20, end_time: 21.5 },
 ];
-
-/* ===================== HELPERS ===================== */
-
-const buildCoachAssignments = () => {
-  const map = new Map();
-  COACH_GROUPS.forEach((group, index) => {
-    const coachName = generateCoachName(index);
-    group.forEach((team) => map.set(team, coachName));
-  });
-  return map;
-};
-
-const buildTeamsByCoach = () => {
-  const map = new Map();
-  COACH_GROUPS.forEach((group, index) => {
-    map.set(generateCoachName(index), group);
-  });
-  return map;
-};
-
 /* ===================== MAIN ===================== */
 
 const main = async () => {
-  const client = new MongoClient(DEFAULT_MONGODB_URI);
+  if (!SLOT_DEFINITIONS.length) {
+    throw new Error('SLOT_DEFINITIONS is empty');
+  }
+
+  const client = new MongoClient(MONGODB_URI);
   await client.connect();
 
   const db = client.db(DB_NAME);
   const venues = db.collection('venues');
   const slots = db.collection('slots');
   const coaches = db.collection('coaches');
-  const teamsCol = db.collection('teams');
+  const teams = db.collection('teams');
 
-  console.log('🧹 Cleaning collections...');
+  console.log('🧹 FULL RESET...');
   await Promise.all([
     venues.deleteMany({}),
     slots.deleteMany({}),
     coaches.deleteMany({}),
+    teams.deleteMany({}),
   ]);
 
   console.log('🏟️ Creating venues...');
@@ -253,46 +297,23 @@ const main = async () => {
   );
 
   console.log('🧑‍🏫 Creating coaches...');
-  const teamsByCoach = buildTeamsByCoach();
-  await coaches.insertMany(
-    [...teamsByCoach.entries()].map(([name, teams]) => ({
-      name,
-      teams,
-      created_at: new Date(),
-    }))
-  );
+  const coachByTeam = buildCoachByTeam();
+  const coachesData = buildCoaches(coachByTeam);
+  await coaches.insertMany(coachesData);
 
-  console.log('🏀 Updating teams...');
-  const coachByTeam = buildCoachAssignments();
-  const allTeams = await teamsCol.find({}).toArray();
+  console.log('🏀 Creating teams...');
+  const teamsData = buildTeams(coachByTeam);
+  await teams.insertMany(teamsData);
 
-  await Promise.all(
-    allTeams.map((team) => {
-      if (typeof team.team_number !== 'number') return null;
-
-      return teamsCol.updateOne(
-        { _id: team._id },
-        {
-          $set: {
-            desired_sessions:
-              SESSIONS_BY_TEAM.get(team.team_number) ?? 3,
-            isYoung: YOUNG_TEAMS.has(team.team_number),
-            noOutdoor: NO_OUTDOOR_TEAMS.has(team.team_number),
-            coach_name:
-              coachByTeam.get(team.team_number) ??
-              generateCoachName(team.team_number + 100),
-            updated_at: new Date(),
-          },
-        }
-      );
-    })
-  );
+  console.log('📊 Sanity check');
+  console.log('Teams:', teamsData.length);
+  console.log('Coaches:', coachesData.length);
 
   await client.close();
-  console.log('✅ Schedule data sync complete.');
+  console.log('✅ FULL schedule seed complete.');
 };
 
 main().catch((err) => {
-  console.error('❌ Failed to sync schedule data:', err);
+  console.error('❌ Failed to seed schedule data:', err);
   process.exit(1);
 });
