@@ -38,6 +38,8 @@ const TeamSchedule = ({ team, setTeamNumber }) => {
     const dayOrder = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
     const dayOrderMap = new Map(dayOrder.map((day, index) => [day, index]));
     const normalizeDay = (day) => {
+        if (!day) return '';
+        const normalizedDay = String(day).replace(/^יום\s+/, '').trim();
         const daysMap = {
             Sunday: 'ראשון',
             Monday: 'שני',
@@ -48,7 +50,7 @@ const TeamSchedule = ({ team, setTeamNumber }) => {
             Saturday: 'שבת'
         };
 
-        return daysMap[day] || day;
+        return daysMap[normalizedDay] || normalizedDay;
     };
 
     const sortedSchedule = [...schedule].sort((a, b) => {
