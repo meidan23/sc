@@ -52,7 +52,26 @@ export async function runAutoSchedule({
     body: JSON.stringify({ teams, slots }),
   });
 
-  if (!solveRes.ok) throw new Error("שגיאה בהרצת האלגוריתם");
+  if (!solveRes.ok) {
+    let errorDetail = "";
+    try {
+      const payload = await solveRes.json();
+      const detail =
+        typeof payload?.detail === "string" ? payload.detail.trim() : "";
+      const status =
+        typeof payload?.status === "number" ? ` (${payload.status})` : "";
+      const solverUrl =
+        typeof payload?.solverUrl === "string" ? payload.solverUrl : "";
+      errorDetail = [detail, solverUrl].filter(Boolean).join(" | ");
+      errorDetail = `${status}${errorDetail ? `: ${errorDetail}` : ""}`;
+    } catch {
+      // ignore parsing errors and fallback to generic message
+    }
+
+    throw new Error(
+      `שגיאה בהרצת האלגוריתם${errorDetail ? ` - ${errorDetail}` : ""}`,
+    );
+  }
 
   const { assignments } = await solveRes.json();
 
