@@ -11,7 +11,7 @@ export async function POST(req: Request) {
 
   if (!solverBaseUrl) {
     return NextResponse.json(
-      { error: "SOLVER_BASE_URL is not configured" },
+      { error: "SOLVER_BASE_URL is not configured", status: 500 },
       { status: 500 },
     );
   }
@@ -27,7 +27,12 @@ export async function POST(req: Request) {
   if (!solveRes.ok) {
     const detail = await solveRes.text();
     return NextResponse.json(
-      { error: "Solver request failed", detail },
+      {
+        error: "Solver request failed",
+        detail,
+        status: solveRes.status,
+        solverUrl: `${solverBaseUrl}/solve`,
+      },
       { status: solveRes.status },
     );
   }
