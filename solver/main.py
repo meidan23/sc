@@ -16,3 +16,12 @@ def health():
 @app.post("/solve")
 def solve_schedule(payload: SolveRequest):
     return {"assignments": solve(payload.teams, payload.slots)}
+
+@app.post("/solve")
+def solve_schedule(payload: SolveRequest):
+    try:
+        return {"assignments": solve(payload.teams, payload.slots)}
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise
