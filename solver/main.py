@@ -28,3 +28,17 @@ def solve_schedule(payload: SolveRequest):
         traceback.print_exc()   # ⬅️ זה הדבר החשוב
         raise
 
+@app.post("/solve")
+def solve_schedule(payload: SolveRequest):
+    print("[api] /solve called")
+    print(f"[api] teams: {len(payload.teams)} slots: {len(payload.slots)}")
+
+    try:
+        assignments = solve(payload.teams, payload.slots)
+        print(f"[api] assignments returned: {len(assignments)}")
+        return {"assignments": assignments}
+    except Exception as e:
+        import traceback
+        print("[api][ERROR] exception during solve")
+        traceback.print_exc()
+        return {"error": str(e)}

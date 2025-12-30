@@ -141,3 +141,82 @@ def solve(
             })
 
     return assignments
+def solve(teams, slots):
+    print("[solver] starting solve()")
+
+    print(f"[solver] raw teams={len(teams)} slots={len(slots)}")
+
+    if not teams or not slots:
+        print("[solver] empty input")
+        return []
+
+    clean_slots = []
+    for i, s in enumerate(slots):
+        try:
+            if str(s.get("isBooked")).lower() == "true":
+                continue
+
+            clean_slots.append({
+                "day": s["day"],
+                "start_time": float(s["start_time"]),
+                "end_time": float(s["end_time"]),
+                "location": s["location"],
+            })
+        except Exception as e:
+            print(f"[solver][ERROR] bad slot at index {i}: {s}")
+            raise
+
+    print(f"[solver] available slots after filter: {len(clean_slots)}")
+
+    needed = []
+    for i, t in enumerate(teams):
+        try:
+            desired = int(t.get("desired_sessions", 0))
+            scheduled = t.get("scheduled_sessions") or []
+            needed.append(max(0, desired - len(scheduled)))
+        except Exception:
+            print(f"[solver][ERROR] bad team at index {i}: {t}")
+            raise
+
+    print("[solver] needed sessions per team:", needed)
+
+    # --- build model ---
+    model = cp_model.CpModel()
+    x = {}
+
+    for ti, team in enumerate(teams):
+        if needed[ti] == 0:
+            continue
+        for si, slot in enumerate(clean_slots):
+            if team.get("isYoung") and slot["start_time"] > 18:
+                continue
+            if team.get("noOutdoor") and "חוץ" in slot["location"]:
+                continue
+            x[(ti, si)] = model.NewBoolVar(f"x_{ti}_{si}")
+
+    print(f"[solver] decision variables created: {len(x)}")
+
+    if not x:
+        print("[solver] no possible assignments")
+        return []
+
+    # constraints + objective (בלי שינוי)
+
+    print("[solver] solving model...")
+    solver = cp_model.CpSolver()
+    solver.parameters.max_time_in_seconds = 8
+    status = solver.Solve(model)
+
+    print(f"[solver] solver status: {solver.StatusName(status)}")
+
+    # build result
+    assignments = []
+    for (ti, si), var in x.items():
+        if solver.Value(var) == 1:
+            assignments.append({
+                "team_number": teams[ti]["team_number"],
+                **clean_slots[si],
+            })
+
+    print(f"[solver] assignments built: {len(assignments)}")
+    return assignments
