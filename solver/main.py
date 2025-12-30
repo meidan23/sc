@@ -20,16 +20,6 @@ def health():
 
 @app.post("/solve")
 def solve_schedule(payload: SolveRequest):
-    try:
-        assignments = solve(payload.teams, payload.slots)
-        return {"assignments": assignments}
-    except Exception as e:
-        import traceback
-        traceback.print_exc()   # ⬅️ זה הדבר החשוב
-        raise
-
-@app.post("/solve")
-def solve_schedule(payload: SolveRequest):
     print("[api] /solve called")
     print(f"[api] teams: {len(payload.teams)} slots: {len(payload.slots)}")
 
