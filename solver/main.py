@@ -24,5 +24,7 @@ def solve_schedule(payload: SolveRequest):
         assignments = solve(payload.teams, payload.slots)
         return {"assignments": assignments}
     except Exception as e:
-        traceback.print_exc()
-        raise e
+        import traceback
+        traceback.print_exc()   # ⬅️ זה הדבר החשוב
+        raise
+
