@@ -96,6 +96,10 @@ const buildTeams = (coachByTeam) =>
       team_number,
       coach_name: coachByTeam.get(team_number),
       desired_sessions: SESSIONS_BY_TEAM.get(team_number) ?? 3,
+
+      // 🔴 זה החלק החסר – חובה בשביל האלגוריתם
+      scheduled_sessions: [],
+
       isYoung: YOUNG_TEAMS.has(team_number),
       noOutdoor: NO_OUTDOOR_TEAMS.has(team_number),
       created_at: new Date(),
